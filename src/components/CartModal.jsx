@@ -26,6 +26,7 @@ const CartModal = () => {
     const [selectedReward, setSelectedReward] = useState(null);
     const [discount, setDiscount] = useState(0);
     const [lookingUp, setLookingUp] = useState(false);
+    const [earnedPointsData, setEarnedPointsData] = useState(null);
 
     // Close Handler
     const handleClose = () => {
@@ -93,125 +94,330 @@ const CartModal = () => {
     };
 
     // Download Receipt
-    const handleDownloadReceipt = () => {
-        // Convert logo to base64 for embedding
-        const logoBase64 = logo;
+    const handleDownloadReceipt = async () => {
+        const originalText = document.getElementById('downloadBtn').innerText;
+        document.getElementById('downloadBtn').innerText = 'Preparing...';
 
+        try {
+            let logoSrc = logo;
+            try {
+                // Try to convert to base64 for embedding
+                const response = await fetch(logo);
+                const blob = await response.blob();
+                logoSrc = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = () => resolve(logo);
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.warn("Logo conversion failed, using path", e);
+            }
+
+            // Generate with whatever logo source we have
+            generateReceipt(logoSrc);
+        } catch (e) {
+            console.error("Download failed:", e);
+            alert("Could not download receipt. Please try again.");
+        } finally {
+            if (document.getElementById('downloadBtn')) {
+                document.getElementById('downloadBtn').innerText = originalText;
+            }
+        }
+    };
+
+    const generateReceipt = (logoSrc) => {
         const receiptHTML = `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - ${lastOrder?.orderId}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; background: white; }
-        .logo { text-align: center; margin-bottom: 10px; }
-        .logo img { width: 150px; height: auto; display: block; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { margin: 5px 0; color: #8B4513; font-size: 20px; }
-        .header p { margin: 3px 0; color: #666; font-size: 13px; }
-        .token { text-align: center; background: #FFF0F5; padding: 20px; margin: 20px 0; border-radius: 12px; }
-        .token-label { font-size: 12px; color: #666; }
-        .token-num { font-size: 48px; font-weight: bold; color: #FF6B9D; }
-        .divider { border: none; border-top: 2px dashed #ddd; margin: 15px 0; }
-        .solid { border-top: 2px solid #333; }
-        .row { display: flex; justify-content: space-between; margin: 8px 0; }
-        .items { margin: 15px 0; }
-        .total { font-weight: bold; font-size: 18px; margin-top: 15px; }
-        .footer { text-align: center; margin-top: 30px; font-style: italic; color: #666; }
-        .loyalty { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 12px; margin: 15px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            max-width: 420px; 
+            margin: 0 auto; 
+            padding: 30px 20px; 
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            color: #1f2937;
+        }
+        .receipt-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
+        }
+        .logo-section { 
+            text-align: center; 
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .logo-section img { 
+            width: 120px; 
+            height: auto; 
+            display: block; 
+            margin: 0 auto 15px; 
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .brand-name {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .business-info { 
+            color: #6b7280; 
+            font-size: 13px; 
+            line-height: 1.6;
+        }
+        .order-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .info-label { color: #6b7280; font-weight: 500; }
+        .info-value { color: #1f2937; font-weight: 600; }
+        .token-section { 
+            text-align: center; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px; 
+            margin: 25px 0; 
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        .token-label { 
+            font-size: 11px; 
+            color: rgba(255,255,255,0.9); 
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .token-num { 
+            font-size: 56px; 
+            font-weight: 800; 
+            color: white;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .divider { 
+            border: none; 
+            border-top: 2px dashed #e5e7eb; 
+            margin: 20px 0; 
+        }
+        .solid-divider { 
+            border: none; 
+            border-top: 2px solid #667eea; 
+            margin: 20px 0; 
+        }
+        .items-section {
+            margin: 25px 0;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .item-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 12px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-name { 
+            color: #1f2937; 
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .item-price { 
+            color: #667eea; 
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .totals-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .total-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .grand-total { 
+            font-weight: 700; 
+            font-size: 20px;
+            color: #667eea;
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 2px solid #e5e7eb;
+        }
+        .loyalty-section { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; 
+            padding: 18px; 
+            border-radius: 12px; 
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .loyalty-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .loyalty-details {
+            font-size: 12px;
+            opacity: 0.95;
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #e5e7eb;
+        }
+        .tagline {
+            font-style: italic; 
+            color: #667eea;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .thank-you {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        .visit-again {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .receipt-container { box-shadow: none; }
+        }
     </style>
 </head>
 <body>
-    <div class="logo">
-        <img src="${logoBase64}" alt="Happy Scoops Logo" />
-    </div>
-    
-    <div class="header">
-        <h2>Happy Scoops Bowl 🍨</h2>
-        <p>Hinjawadi, Pune</p>
-        <p>GSTIN: 27ABCDE1234F1Z5</p>
-        <p>Date: ${new Date().toLocaleString()}</p>
-    </div>
-    
-    <hr class="divider">
-    
-    <div class="row">
-        <span>Order ID:</span>
-        <strong>${lastOrder?.orderId}</strong>
-    </div>
-    <div class="row">
-        <span>Customer:</span>
-        <strong>${lastOrder?.customerName}</strong>
-    </div>
-    <div class="row">
-        <span>Phone:</span>
-        <strong>${lastOrder?.customerPhone}</strong>
-    </div>
-    
-    <div class="token">
-        <div class="token-label">TOKEN NUMBER</div>
-        <div class="token-num">${lastOrder?.token}</div>
-    </div>
-    
-    <hr class="divider">
-    
-    <div class="items">
-        ${lastOrder?.items?.map(item => `
-            <div class="row">
-                <span>${item.name}</span>
-                <span>₹${item.price}</span>
+    <div class="receipt-container">
+        <div class="logo-section">
+            <img src="${logoSrc}" alt="Happy Scoops Logo" />
+            <div class="brand-name">Happy Scoops</div>
+            <div class="business-info">
+                Hinjawadi, Pune<br>
+                GSTIN: 27ABCDE1234F1Z5<br>
+                ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
             </div>
-        `).join('')}
-    </div>
-    
-    <hr class="solid">
-    
-    <div class="row">
-        <span>Sub Total:</span>
-        <span>₹${lastOrder?.subTotal}</span>
-    </div>
-    <div class="row">
-        <span>GST (5%):</span>
-        <span>₹${lastOrder?.gst}</span>
-    </div>
-    ${discount > 0 ? `
-    <div class="row" style="color: #4CAF50;">
-        <span>Loyalty Discount:</span>
-        <span>-₹${discount}</span>
-    </div>
-    ` : ''}
-    
-    <div class="row total">
-        <span>GRAND TOTAL:</span>
-        <span>₹${lastOrder?.totalAmount}</span>
-    </div>
-    
-    ${customer ? `
-    <div class="loyalty">
-        <div style="font-size: 14px; margin-bottom: 8px;">💎 Loyalty Points</div>
-        <div style="font-size: 12px;">Points Earned: +${Math.floor(lastOrder?.totalAmount || 0)}</div>
-        <div style="font-size: 12px;">Total Points: ${customer.points + Math.floor(lastOrder?.totalAmount || 0)}</div>
-        ${customer.vipTier !== 'regular' ? `<div style="font-size: 12px; margin-top: 5px;">⭐ VIP Tier: ${customer.vipTier.toUpperCase()}</div>` : ''}
-    </div>
-    ` : ''}
-    
-    <hr class="divider">
-    
-    <div class="footer">
-        <p>"Life is short, make it sweet!" 🍬</p>
-        <p>Thank you for visiting Happy Scoops!</p>
-        <p style="font-size: 12px; margin-top: 15px;">Please visit again!</p>
+        </div>
+        
+        <div class="order-info">
+            <div class="info-row">
+                <span class="info-label">Order ID</span>
+                <span class="info-value">${lastOrder?.orderId}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Customer</span>
+                <span class="info-value">${lastOrder?.customerName}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone</span>
+                <span class="info-value">${lastOrder?.customerPhone}</span>
+            </div>
+        </div>
+        
+        <div class="token-section">
+            <div class="token-label">Token Number</div>
+            <div class="token-num">${lastOrder?.token}</div>
+        </div>
+        
+        <hr class="divider">
+        
+        <div class="items-section">
+            <div class="section-title">Order Items</div>
+            ${lastOrder?.items?.map(item => `
+                <div class="item-row">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-price">₹${item.price}</span>
+                </div>
+            `).join('')}
+        </div>
+        
+        <hr class="solid-divider">
+        
+        <div class="totals-section">
+            <div class="total-row">
+                <span>Sub Total</span>
+                <span>₹${lastOrder?.subTotal}</span>
+            </div>
+            <div class="total-row">
+                <span>GST (5%)</span>
+                <span>₹${lastOrder?.gst}</span>
+            </div>
+            ${discount > 0 ? `
+            <div class="total-row" style="color: #10b981;">
+                <span>Loyalty Discount</span>
+                <span>-₹${discount}</span>
+            </div>
+            ` : ''}
+            
+            <div class="total-row grand-total">
+                <span>GRAND TOTAL</span>
+                <span>₹${lastOrder?.totalAmount}</span>
+            </div>
+        </div>
+        
+        ${earnedPointsData?.pointsEarned > 0 ? `
+        <div class="loyalty-section">
+            <div class="loyalty-title">
+                <span>💎</span>
+                <span>Loyalty Rewards</span>
+            </div>
+            <div class="loyalty-details">
+                Points Earned: +${earnedPointsData?.pointsEarned}<br>
+                ${earnedPointsData?.bonusPoints > 0 ? `(Includes ${earnedPointsData?.bonusPoints} bonus)<br>` : ''}
+                Total Points: ${(customer?.points || 0) + (earnedPointsData?.pointsEarned || 0)}
+            </div>
+        </div>
+        ` : ''}
+        
+        <div class="footer">
+            <div class="tagline">"Life is short, make it sweet!" 🍨</div>
+            <div class="thank-you">Thank you for visiting Happy Scoops!</div>
+            <div class="visit-again">Please visit again!</div>
+        </div>
     </div>
 </body>
 </html>
-        `;
-
+`;
         const blob = new Blob([receiptHTML], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Receipt-${lastOrder?.orderId}-${new Date().getTime()}.html`;
+        a.download = `Receipt - ${lastOrder?.orderId} -${new Date().getTime()}.html`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -336,9 +542,21 @@ const CartModal = () => {
 
         try {
             // Simulate network delay
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 1000));
 
             const createdOrder = await OrderService.createOrder(orderData);
+
+            // Award Loyalty Points
+            let pointsSummary = null;
+            if (customerPhone) {
+                try {
+                    pointsSummary = await CustomerService.awardPoints(customerPhone, grandTotal, createdOrder.orderId);
+                    setEarnedPointsData(pointsSummary);
+                } catch (err) {
+                    console.error("Failed to award points", err);
+                }
+            }
+
             setLastOrder(createdOrder);
             clearCart();
             setStep('SUCCESS');
@@ -476,6 +694,19 @@ const CartModal = () => {
                     <span>₹{lastOrder?.gst}</span>
                 </div>
 
+                {/* Loyalty Points Section in Receipt */}
+                {earnedPointsData && (
+                    <div style={{ marginTop: '10px', padding: '10px', background: '#fef3c7', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.9rem', color: '#92400e' }}>Points Earned</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#b45309' }}>+{earnedPointsData.pointsEarned} 💎</div>
+                        {earnedPointsData.bonusPoints > 0 && (
+                            <div style={{ fontSize: '0.8rem', color: '#d97706' }}>
+                                (Includes {earnedPointsData.bonusPoints} bonus points!)
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div style={{ ...styles.billTotal, marginTop: '10px', fontSize: '1.2rem' }}>
                     <span>GRAND TOTAL</span>
                     <span>₹{lastOrder?.totalAmount}</span>
@@ -487,7 +718,7 @@ const CartModal = () => {
                     <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Thank you for visiting Happy Scoops!</p>
                 </div>
             </div>
-            <button style={styles.downloadBtn} onClick={handleDownloadReceipt}>
+            <button id="downloadBtn" style={styles.downloadBtn} onClick={handleDownloadReceipt}>
                 <Download size={18} /> Download Receipt
             </button>
             <button style={styles.closeMainBtn} onClick={handleClose}>Close & New Order</button>

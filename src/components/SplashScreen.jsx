@@ -1,14 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, UserCog } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
 const SplashScreen = ({ onFinish }) => {
+    const [fadeIn, setFadeIn] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Trigger fade-in animation after component mounts
+        setTimeout(() => setFadeIn(true), 100);
+    }, []);
+
     const handleCustomerStart = () => {
-        onFinish();
+        // Fade out before finishing
+        setFadeIn(false);
+        setTimeout(() => {
+            onFinish();
+        }, 300);
     };
 
     const handleStaffLogin = () => {
-        window.location.href = '/admin';
+        // Fade out and navigate
+        setFadeIn(false);
+        setTimeout(() => {
+            navigate('/admin');
+        }, 300);
     };
 
     const styles = {
@@ -24,38 +41,57 @@ const SplashScreen = ({ onFinish }) => {
             alignItems: 'center',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             zIndex: 9999,
-            padding: '2rem'
+            padding: '3rem 2rem',
+            overflow: 'auto',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out'
         },
         content: {
             textAlign: 'center',
-            maxWidth: '500px',
-            width: '100%'
+            maxWidth: '450px',
+            width: '100%',
+            padding: '1rem 0',
+            transform: fadeIn ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.4s ease-out'
         },
         logo: {
-            width: '180px',
+            width: '220px',
             height: 'auto',
-            marginBottom: '2rem',
+            marginBottom: '1.5rem',
             filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
-            animation: 'float 3s ease-in-out infinite'
+            animation: 'float 3s ease-in-out infinite',
+            display: 'block',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.5s ease-in 0.2s'
         },
         title: {
-            fontSize: '2.5rem',
+            fontSize: '2rem',
             color: 'white',
             fontWeight: '700',
-            marginBottom: '0.5rem',
-            textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+            marginBottom: '0.75rem',
+            textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            lineHeight: '1.2',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.5s ease-in 0.3s'
         },
         subtitle: {
-            fontSize: '1.1rem',
-            color: 'rgba(255,255,255,0.9)',
-            marginBottom: '3rem',
-            fontWeight: '400'
+            fontSize: '1rem',
+            color: 'rgba(255,255,255,0.95)',
+            marginBottom: '2.5rem',
+            fontWeight: '400',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.5s ease-in 0.4s'
         },
         buttonsContainer: {
             display: 'flex',
             flexDirection: 'column',
             gap: '1rem',
-            width: '100%'
+            width: '100%',
+            marginBottom: '2rem',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.5s ease-in 0.5s'
         },
         customerBtn: {
             background: 'white',
@@ -75,11 +111,11 @@ const SplashScreen = ({ onFinish }) => {
             transform: 'translateY(0)'
         },
         staffBtn: {
-            background: 'rgba(255,255,255,0.15)',
+            background: 'rgba(255,255,255,0.2)',
             color: 'white',
             padding: '1.25rem 2rem',
             borderRadius: '16px',
-            border: '2px solid rgba(255,255,255,0.3)',
+            border: '2px solid rgba(255,255,255,0.4)',
             fontSize: '1rem',
             fontWeight: '500',
             cursor: 'pointer',
@@ -91,9 +127,11 @@ const SplashScreen = ({ onFinish }) => {
             transition: 'all 0.3s ease'
         },
         footer: {
-            marginTop: '3rem',
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: '0.9rem'
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: '0.85rem',
+            fontWeight: '300',
+            opacity: fadeIn ? 1 : 0,
+            transition: 'opacity 0.5s ease-in 0.6s'
         }
     };
 
@@ -103,7 +141,7 @@ const SplashScreen = ({ onFinish }) => {
                 {`
                     @keyframes float {
                         0%, 100% { transform: translateY(0px); }
-                        50% { transform: translateY(-20px); }
+                        50% { transform: translateY(-15px); }
                     }
                     
                     .customer-btn:hover {
@@ -111,9 +149,17 @@ const SplashScreen = ({ onFinish }) => {
                         box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important;
                     }
                     
+                    .customer-btn:active {
+                        transform: translateY(-2px) !important;
+                    }
+                    
                     .staff-btn:hover {
-                        background: rgba(255,255,255,0.25) !important;
-                        border-color: rgba(255,255,255,0.5) !important;
+                        background: rgba(255,255,255,0.3) !important;
+                        border-color: rgba(255,255,255,0.6) !important;
+                    }
+                    
+                    .staff-btn:active {
+                        transform: scale(0.98);
                     }
                 `}
             </style>
@@ -121,7 +167,7 @@ const SplashScreen = ({ onFinish }) => {
             <div style={styles.content}>
                 <img src={logo} alt="Happy Scoops" style={styles.logo} />
 
-                <h1 style={styles.title}>Welcome to Happy Scoops! 🍨</h1>
+                <h1 style={styles.title}>Welcome to<br />Happy Scoops! 🍨</h1>
                 <p style={styles.subtitle}>Delicious desserts made with love</p>
 
                 <div style={styles.buttonsContainer}>
@@ -130,7 +176,7 @@ const SplashScreen = ({ onFinish }) => {
                         style={styles.customerBtn}
                         onClick={handleCustomerStart}
                     >
-                        <ShoppingBag size={28} />
+                        <ShoppingBag size={24} />
                         <span>Order Now</span>
                     </button>
 
@@ -139,7 +185,7 @@ const SplashScreen = ({ onFinish }) => {
                         style={styles.staffBtn}
                         onClick={handleStaffLogin}
                     >
-                        <UserCog size={22} />
+                        <UserCog size={20} />
                         <span>Staff Login</span>
                     </button>
                 </div>

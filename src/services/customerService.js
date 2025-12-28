@@ -12,18 +12,19 @@ const isFirebaseConfigured = () => {
     }
 };
 
-// Rewards configuration
+// Rewards configuration (Approx 10-15% Cashback Value)
+// 1 Point = ₹1 Spent
 export const REWARDS = {
-    100: 50,   // 100 points = ₹50 off
-    200: 100,  // 200 points = ₹100 off
-    500: 250   // 500 points = ₹250 off (VIP)
+    200: 20,   // 200 points = ₹20 off (10%)
+    500: 60,   // 500 points = ₹60 off (12%)
+    1000: 150  // 1000 points = ₹150 off (15%)
 };
 
 // VIP tiers
 export const VIP_TIERS = {
     regular: { min: 0, bonus: 0, name: 'Regular' },
-    silver: { min: 500, bonus: 5, name: 'Silver' },
-    gold: { min: 1000, bonus: 10, name: 'Gold' }
+    silver: { min: 500, bonus: 5, name: 'Silver' }, // 5% bonus points
+    gold: { min: 1000, bonus: 10, name: 'Gold' }    // 10% bonus points
 };
 
 export const CustomerService = {

@@ -1,44 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-  /* Brand Colors - Choco Cherry Theme */
-  --primary: #D32F2F;
-  /* Rich Cherry Red */
-  --primary-dark: #B71C1C;
-  --secondary: #8D6E63;
-  /* Milk Chocolate */
-  --accent: #FFECB3;
-  /* Cream/Waffle */
+  /* Brand Colors - Purple Gradient Theme (matching welcome screen) */
+  --primary: #667eea;
+  /* Purple */
+  --primary-dark: #764ba2;
+  /* Deep Purple */
+  --secondary: #a78bfa;
+  /* Light Purple */
+  --accent: #fbbf24;
+  /* Golden accent */
 
   /* Neutrals */
-  --dark: #3E2723;
-  /* Dark Chocolate for Text */
-  --text-gray: #6D4C41;
-  /* Lighter Brown */
-  --light: #FFF8E1;
-  /* Very Light Cream */
+  --dark: #1f2937;
+  /* Dark Gray for Text */
+  --text-gray: #6b7280;
+  /* Medium Gray */
+  --light: #f3f4f6;
+  /* Very Light Gray */
   --white: #FFFFFF;
-  --border: #D7CCC8;
-  /* Light Cocoa */
+  --border: #e5e7eb;
+  /* Light Gray Border */
 
   /* Functional */
-  --danger: #D32F2F;
-  --success: #4CAF50;
-  --warning: #FF9800;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
 
   /* Typography */
   --font-main: 'Outfit', sans-serif;
 
   /* UI Tokens */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(45, 52, 54, 0.1);
-  --shadow-lg: 0 8px 24px rgba(45, 52, 54, 0.12);
+  --shadow-md: 0 4px 12px rgba(102, 126, 234, 0.1);
+  --shadow-lg: 0 8px 24px rgba(102, 126, 234, 0.15);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-full: 999px;
 
   --transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-light: linear-gradient(135deg, #a78bfa 0%, #667eea 100%);
 }
 
 * {
@@ -56,6 +61,32 @@ body {
   font-size: 16px;
   line-height: 1.5;
   min-height: 100vh;
+}
+
+/* Page transition animations */
+#root {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transitions for all interactive elements */
+a,
+button,
+input,
+select,
+textarea {
+  transition: all 0.2s ease;
 }
 
 h1,

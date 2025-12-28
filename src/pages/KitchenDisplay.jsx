@@ -156,7 +156,9 @@ const styles = {
         minHeight: '100vh',
         background: '#1a1a1a',
         color: 'white',
-        padding: '1rem'
+        padding: '0.5rem',
+        maxWidth: '100vw',
+        overflow: 'hidden'
     },
     loading: {
         textAlign: 'center',
@@ -165,46 +167,51 @@ const styles = {
     },
     header: {
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '2rem',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        marginBottom: '1rem',
         padding: '1rem',
         background: '#2a2a2a',
         borderRadius: '12px'
     },
     title: {
         margin: 0,
-        fontSize: '2rem'
+        fontSize: '1.5rem',
+        textAlign: 'center'
     },
     headerActions: {
         display: 'flex',
-        gap: '1rem',
-        alignItems: 'center'
+        gap: '0.5rem',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexWrap: 'wrap'
     },
     muteBtn: {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        padding: '0.75rem 1rem',
+        padding: '0.6rem 0.9rem',
         background: '#3a3a3a',
         color: 'white',
         border: 'none',
         borderRadius: '8px',
         cursor: 'pointer',
-        fontSize: '1rem',
-        fontWeight: '600'
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
     },
     adminLink: {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        padding: '0.75rem 1rem',
+        padding: '0.6rem 0.9rem',
         background: '#2196F3',
         color: 'white',
         borderRadius: '8px',
         textDecoration: 'none',
-        fontSize: '1rem',
-        fontWeight: '600'
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
     },
     emptyState: {
         textAlign: 'center',
@@ -217,18 +224,20 @@ const styles = {
     },
     ordersGrid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '1.5rem',
-        padding: '1rem'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '1rem',
+        padding: '0.5rem'
     },
     orderCard: {
-        padding: '1.5rem',
+        padding: '1.25rem',
         borderRadius: '16px',
         border: '3px solid',
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem'
+        gap: '1rem',
+        minWidth: 0,
+        maxWidth: '100%'
     },
     tokenSection: {
         textAlign: 'center',
@@ -241,7 +250,7 @@ const styles = {
         marginBottom: '0.5rem'
     },
     tokenNumber: {
-        fontSize: '4.5rem',
+        fontSize: 'clamp(3rem, 10vw, 4.5rem)',
         fontWeight: '900',
         lineHeight: 1,
         textShadow: '2px 2px 4px rgba(0,0,0,0.2)'

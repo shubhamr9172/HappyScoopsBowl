@@ -9,6 +9,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [pinInput, setPinInput] = useState('');
+    const [loginError, setLoginError] = useState('');
     const [isMuted, setIsMuted] = useState(false);
     const [lowStockCount, setLowStockCount] = useState(0);
 
@@ -69,11 +70,37 @@ const AdminDashboard = () => {
                 }}>
                     <h3>Owner Login 🔐</h3>
                     <p style={{ marginBottom: '1rem', color: '#666' }}>Enter PIN to access dashboard</p>
+                    {loginError && (
+                        <div style={{
+                            color: 'var(--danger)',
+                            background: '#fee2e2',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            marginBottom: '1rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            justifyContent: 'center'
+                        }}>
+                            <span style={{ fontSize: '1.2rem' }}>⚠️</span> {loginError}
+                        </div>
+                    )}
                     <input
                         type="password"
                         value={pinInput}
-                        onChange={(e) => setPinInput(e.target.value)}
-                        placeholder="PIN (Try 1234)"
+                        onChange={(e) => {
+                            setPinInput(e.target.value);
+                            setLoginError('');
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                if (pinInput === 'Shubham@&9172') setIsAuthenticated(true);
+                                else setLoginError('Incorrect PIN');
+                            }
+                        }}
+                        placeholder="Enter Owner PIN"
                         style={{
                             padding: '1rem',
                             borderRadius: '8px',
@@ -85,8 +112,8 @@ const AdminDashboard = () => {
                     />
                     <button
                         onClick={() => {
-                            if (pinInput === '1234') setIsAuthenticated(true);
-                            else alert('Incorrect PIN');
+                            if (pinInput === 'Shubham@&9172') setIsAuthenticated(true);
+                            else setLoginError('Incorrect PIN');
                         }}
                         style={{
                             ...styles.payBtn,
@@ -118,12 +145,21 @@ const AdminDashboard = () => {
     };
 
     const handleStatus = async (id, newStatus) => {
-        await OrderService.updateOrderStatus(id, newStatus);
+        try {
+            await OrderService.updateOrderStatus(id, newStatus);
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            alert('Failed to update order status. Please try again.');
+        }
     };
 
     const handlePayment = async (id) => {
-        if (window.confirm('Confirm payment received for this order?')) {
+        try {
             await OrderService.updatePaymentStatus(id, 'PAID');
+            // Success feedback could be added here if needed
+        } catch (error) {
+            console.error('Error updating payment status:', error);
+            alert('Failed to mark as paid. Please check Firestore rules and try again.');
         }
     };
 
@@ -138,34 +174,48 @@ const AdminDashboard = () => {
     return (
         <div style={styles.container}>
             <header style={styles.header}>
-                <div>
-                    <h2>Admin Dashboard 🛡️</h2>
-                    <div style={styles.headerLinks}>
-                        <a href="/admin/analytics" style={styles.analyticsLink}>
-                            📊 Analytics
-                        </a>
-                        <a href="/admin/inventory" style={{ ...styles.kitchenLink, position: 'relative' }}>
-                            <Package size={16} /> Inventory
-                            {lowStockCount > 0 && (
-                                <span style={styles.alertBadge}>{lowStockCount}</span>
-                            )}
-                        </a>
-                        <a href="/kitchen" style={styles.kitchenLink}>
-                            👨‍🍳 Kitchen
-                        </a>
-                        <button style={styles.muteBtn} onClick={handleToggleMute}>
-                            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                        </button>
+                <div style={styles.headerTop}>
+                    <div style={styles.titleSection}>
+                        <h2 style={styles.title}>Admin Dashboard</h2>
+                        <div style={styles.badge}>🛡️</div>
                     </div>
+                    <button style={styles.muteBtn} onClick={handleToggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
                 </div>
+
+                <div style={styles.navGrid}>
+                    <a href="/admin/analytics" style={styles.navCard}>
+                        <div style={styles.navIcon}>📊</div>
+                        <span style={styles.navLabel}>Analytics</span>
+                    </a>
+                    <a href="/admin/inventory" style={{ ...styles.navCard, position: 'relative' }}>
+                        <div style={styles.navIcon}>📦</div>
+                        <span style={styles.navLabel}>Inventory</span>
+                        {lowStockCount > 0 && (
+                            <span style={styles.alertBadge}>{lowStockCount}</span>
+                        )}
+                    </a>
+                    <a href="/kitchen" style={styles.navCard}>
+                        <div style={styles.navIcon}>👨‍🍳</div>
+                        <span style={styles.navLabel}>Kitchen</span>
+                    </a>
+                </div>
+
                 <div style={styles.stats}>
                     <div style={styles.statCard}>
-                        <small>Today's Sale</small>
-                        <strong>₹{todayRevenue}</strong>
+                        <div style={styles.statIcon}>💰</div>
+                        <div style={styles.statContent}>
+                            <small style={styles.statLabel}>Today's Sale</small>
+                            <strong style={styles.statValue}>₹{todayRevenue}</strong>
+                        </div>
                     </div>
                     <div style={styles.statCard}>
-                        <small>Active Orders</small>
-                        <strong>{activeOrders}</strong>
+                        <div style={styles.statIcon}>🔔</div>
+                        <div style={styles.statContent}>
+                            <small style={styles.statLabel}>Active Orders</small>
+                            <strong style={styles.statValue}>{activeOrders}</strong>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -179,20 +229,28 @@ const AdminDashboard = () => {
                                 <span>{order.token || '?'}</span>
                             </div>
                             <div style={styles.meta}>
-                                <div style={{ fontWeight: 'bold' }}>#{order.orderId || order.id.slice(0, 5)}</div>
-                                <div>{new Date(order.timestamp?.seconds ? order.timestamp.seconds * 1000 : order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '0.85rem', wordBreak: 'break-all', lineHeight: '1.3' }}>#{order.orderId || order.id.slice(0, 8)}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#666' }}>{new Date(order.timestamp?.seconds ? order.timestamp.seconds * 1000 : order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                 {order.customerName && (
-                                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
-                                        {order.customerName} | {order.customerPhone}
+                                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '4px', wordBreak: 'break-word' }}>
+                                        {order.customerName}
+                                    </div>
+                                )}
+                                {order.customerPhone && (
+                                    <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                                        {order.customerPhone}
                                     </div>
                                 )}
                             </div>
-                            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                                <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>₹{order.totalAmount}</div>
+                            <div style={styles.priceSection}>
+                                <div style={{ fontWeight: 'bold', fontSize: '1.3rem', color: '#667eea', whiteSpace: 'nowrap' }}>₹{order.totalAmount}</div>
                                 <div style={{
-                                    color: order.paymentStatus === 'PAID' ? 'green' : 'red',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.8rem'
+                                    color: order.paymentStatus === 'PAID' ? '#10b981' : '#ef4444',
+                                    fontWeight: '600',
+                                    fontSize: '0.7rem',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    whiteSpace: 'nowrap'
                                 }}>
                                     {order.paymentStatus}
                                 </div>
@@ -260,75 +318,132 @@ const styles = {
         maxWidth: '600px',
         margin: '0 auto',
         padding: '1rem',
-        background: '#f4f4f4',
+        background: 'linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%)',
         minHeight: '100vh'
     },
     header: {
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        background: 'white',
+        borderRadius: '20px',
+        padding: '1.5rem',
+        boxShadow: '0 8px 24px rgba(102, 126, 234, 0.12)'
     },
-    headerLinks: {
+    headerTop: {
         display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1.25rem'
+    },
+    titleSection: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem'
+    },
+    title: {
+        margin: 0,
+        fontSize: '1.5rem',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        fontWeight: '700'
+    },
+    badge: {
+        fontSize: '1.5rem',
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+    },
+    navGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '0.75rem',
+        marginBottom: '1.25rem'
+    },
+    navCard: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '1rem',
+        borderRadius: '16px',
+        textDecoration: 'none',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         gap: '0.5rem',
-        marginTop: '0.5rem',
-        alignItems: 'center'
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer'
     },
-    analyticsLink: {
-        display: 'inline-block',
-        padding: '0.5rem 1rem',
-        background: '#2196F3',
-        color: 'white',
-        borderRadius: '8px',
-        textDecoration: 'none',
-        fontSize: '0.85rem',
-        fontWeight: '600'
+    navIcon: {
+        fontSize: '1.75rem',
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
     },
-    kitchenLink: {
-        display: 'inline-block',
-        padding: '0.5rem 1rem',
-        background: '#4CAF50',
-        color: 'white',
-        borderRadius: '8px',
-        textDecoration: 'none',
+    navLabel: {
         fontSize: '0.85rem',
-        fontWeight: '600'
+        fontWeight: '600',
+        textAlign: 'center'
     },
     muteBtn: {
-        padding: '0.5rem',
-        background: '#666',
-        color: 'white',
+        padding: '0.75rem',
+        background: 'rgba(102, 126, 234, 0.1)',
+        color: '#667eea',
         border: 'none',
-        borderRadius: '8px',
+        borderRadius: '12px',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        transition: 'all 0.3s ease'
     },
     alertBadge: {
         position: 'absolute',
-        top: '-8px',
-        right: '-8px',
-        background: '#f44336',
+        top: '8px',
+        right: '8px',
+        background: '#ef4444',
         color: 'white',
         fontSize: '0.7rem',
         fontWeight: '700',
-        width: '20px',
+        minWidth: '20px',
         height: '20px',
-        borderRadius: '50%',
+        borderRadius: '10px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        padding: '0 6px',
+        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
     },
     stats: {
-        display: 'flex',
-        gap: '1rem',
-        marginTop: '1rem'
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '0.75rem'
     },
     statCard: {
-        background: 'white',
+        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
         padding: '1rem',
-        borderRadius: '8px',
-        flex: 1,
-        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+        borderRadius: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        border: '1px solid rgba(102, 126, 234, 0.1)',
+        transition: 'all 0.3s ease'
+    },
+    statIcon: {
+        fontSize: '2rem',
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+    },
+    statContent: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.25rem'
+    },
+    statLabel: {
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        fontWeight: '500',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
+    },
+    statValue: {
+        fontSize: '1.5rem',
+        color: '#667eea',
+        fontWeight: '700'
     },
     list: {
         display: 'flex',
@@ -337,27 +452,42 @@ const styles = {
     },
     card: {
         background: 'white',
-        borderRadius: '12px',
-        padding: '1rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        borderRadius: '16px',
+        padding: '1.25rem',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)',
+        border: '1px solid rgba(102, 126, 234, 0.1)',
+        transition: 'all 0.3s ease'
     },
     cardHeader: {
         display: 'flex',
-        gap: '1rem',
-        alignItems: 'center'
+        gap: '0.75rem',
+        alignItems: 'flex-start'
     },
     tokenBox: {
-        background: 'var(--dark)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
-        padding: '0.5rem',
-        borderRadius: '8px',
+        padding: '0.75rem',
+        borderRadius: '12px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minWidth: '50px'
+        minWidth: '70px',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
     },
     meta: {
-        fontSize: '0.9rem'
+        fontSize: '0.9rem',
+        flex: 1,
+        minWidth: 0,
+        overflow: 'hidden'
+    },
+    priceSection: {
+        textAlign: 'right',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '0.25rem',
+        marginLeft: 'auto',
+        flexShrink: 0
     },
     divider: {
         border: 'none',
@@ -377,43 +507,56 @@ const styles = {
         gap: '0.75rem'
     },
     payBtn: {
-        background: '#e0f2f1',
-        color: '#00695c',
-        padding: '0.5rem',
-        borderRadius: '6px',
-        fontWeight: 'bold'
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        color: 'white',
+        padding: '0.75rem 1rem',
+        borderRadius: '12px',
+        fontWeight: '600',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '0.9rem',
+        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+        transition: 'all 0.3s ease'
     },
     statusGroup: {
         display: 'flex',
         gap: '0.5rem',
-        background: '#f9f9f9',
-        padding: '4px',
-        borderRadius: '8px'
+        background: 'rgba(102, 126, 234, 0.05)',
+        padding: '0.5rem',
+        borderRadius: '12px',
+        border: '1px solid rgba(102, 126, 234, 0.1)'
     },
     statusBtn: {
         flex: 1,
-        padding: '0.5rem',
-        borderRadius: '6px',
-        border: '1px solid #ddd',
+        padding: '0.6rem',
+        borderRadius: '8px',
+        border: '1px solid rgba(102, 126, 234, 0.2)',
         background: 'white',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         gap: '4px',
-        fontSize: '0.8rem'
+        fontSize: '0.85rem',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        color: '#667eea'
     },
     statusBtnActive: {
         flex: 1,
-        padding: '0.5rem',
-        borderRadius: '6px',
-        background: 'var(--dark)',
+        padding: '0.6rem',
+        borderRadius: '8px',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         gap: '4px',
-        fontSize: '0.8rem',
-        fontWeight: 'bold'
+        fontSize: '0.85rem',
+        fontWeight: '600',
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+        transition: 'all 0.2s ease'
     }
 };
 
