@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { X, Trash2, ArrowRight } from 'lucide-react';
+import { X, Trash2, ArrowRight, Gift, Star, Download } from 'lucide-react';
 import { OrderService } from '../services/orderService';
+import { CustomerService, REWARDS } from '../services/customerService';
 import upiQr from '../assets/upi_qr.png';
+import logo from '../assets/logo.jpg';
 
 // This is a complex component handling Cart View, Checkout, Payment Simulation, and Bill Receipt.
 // For the sake of modularity, usually we split, but for this "Cart Modal" flow it's cohesive.
@@ -18,6 +20,12 @@ const CartModal = () => {
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
 
+    // Loyalty Program States
+    const [customer, setCustomer] = useState(null);
+    const [selectedReward, setSelectedReward] = useState(null);
+    const [discount, setDiscount] = useState(0);
+    const [lookingUp, setLookingUp] = useState(false);
+
     // Close Handler
     const handleClose = () => {
         setIsCartOpen(false);
@@ -25,6 +33,36 @@ const CartModal = () => {
     };
 
     if (!isCartOpen) return null;
+
+    // Customer lookup
+    const handlePhoneLookup = async () => {
+        if (customerPhone.length === 10) {
+            setLookingUp(true);
+            try {
+                const cust = await CustomerService.getOrCreateCustomer(customerPhone, customerName);
+                setCustomer(cust);
+                if (cust.name && !customerName) {
+                    setCustomerName(cust.name);
+                }
+            } catch (error) {
+                console.error('Error looking up customer:', error);
+            }
+            setLookingUp(false);
+        }
+    };
+
+    // Reward selection
+    const handleRewardSelect = async (points) => {
+        if (!customer || customer.points < points) return;
+
+        try {
+            const disc = REWARDS[points];
+            setSelectedReward(points);
+            setDiscount(disc);
+        } catch (error) {
+            alert('Error applying reward');
+        }
+    };
 
     const handleCustomerSubmit = () => {
         if (!customerName.trim() || customerName.trim().length < 2) {
@@ -38,6 +76,131 @@ const CartModal = () => {
         setStep('PAYMENT');
     };
 
+    // Download Receipt
+    const handleDownloadReceipt = () => {
+        // Convert logo to base64 for embedding
+        const logoBase64 = logo;
+
+        const receiptHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt - ${lastOrder?.orderId}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; }
+        .logo { text-align: center; margin-bottom: 20px; }
+        .logo img { width: 200px; height: auto; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #FF6B9D; }
+        .header p { margin: 5px 0; color: #666; font-size: 14px; }
+        .token { text-align: center; background: #FFF0F5; padding: 20px; margin: 20px 0; border-radius: 12px; }
+        .token-label { font-size: 12px; color: #666; }
+        .token-num { font-size: 48px; font-weight: bold; color: #FF6B9D; }
+        .divider { border: none; border-top: 2px dashed #ddd; margin: 15px 0; }
+        .solid { border-top: 2px solid #333; }
+        .row { display: flex; justify-content: space-between; margin: 8px 0; }
+        .items { margin: 15px 0; }
+        .total { font-weight: bold; font-size: 18px; margin-top: 15px; }
+        .footer { text-align: center; margin-top: 30px; font-style: italic; color: #666; }
+        .loyalty { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 12px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="${logoBase64}" alt="Happy Scoops Logo" />
+    </div>
+    
+    <div class="header">
+        <p>Hinjawadi, Pune</p>
+        <p>GSTIN: 27ABCDE1234F1Z5</p>
+        <p>Date: ${new Date().toLocaleString()}</p>
+    </div>
+    
+    <hr class="divider">
+    
+    <div class="row">
+        <span>Order ID:</span>
+        <strong>${lastOrder?.orderId}</strong>
+    </div>
+    <div class="row">
+        <span>Customer:</span>
+        <strong>${lastOrder?.customerName}</strong>
+    </div>
+    <div class="row">
+        <span>Phone:</span>
+        <strong>${lastOrder?.customerPhone}</strong>
+    </div>
+    
+    <div class="token">
+        <div class="token-label">TOKEN NUMBER</div>
+        <div class="token-num">${lastOrder?.token}</div>
+    </div>
+    
+    <hr class="divider">
+    
+    <div class="items">
+        ${lastOrder?.items?.map(item => `
+            <div class="row">
+                <span>${item.name}</span>
+                <span>₹${item.price}</span>
+            </div>
+        `).join('')}
+    </div>
+    
+    <hr class="solid">
+    
+    <div class="row">
+        <span>Sub Total:</span>
+        <span>₹${lastOrder?.subTotal}</span>
+    </div>
+    <div class="row">
+        <span>GST (5%):</span>
+        <span>₹${lastOrder?.gst}</span>
+    </div>
+    ${discount > 0 ? `
+    <div class="row" style="color: #4CAF50;">
+        <span>Loyalty Discount:</span>
+        <span>-₹${discount}</span>
+    </div>
+    ` : ''}
+    
+    <div class="row total">
+        <span>GRAND TOTAL:</span>
+        <span>₹${lastOrder?.totalAmount}</span>
+    </div>
+    
+    ${customer ? `
+    <div class="loyalty">
+        <div style="font-size: 14px; margin-bottom: 8px;">💎 Loyalty Points</div>
+        <div style="font-size: 12px;">Points Earned: +${Math.floor(lastOrder?.totalAmount || 0)}</div>
+        <div style="font-size: 12px;">Total Points: ${customer.points + Math.floor(lastOrder?.totalAmount || 0)}</div>
+        ${customer.vipTier !== 'regular' ? `<div style="font-size: 12px; margin-top: 5px;">⭐ VIP Tier: ${customer.vipTier.toUpperCase()}</div>` : ''}
+    </div>
+    ` : ''}
+    
+    <hr class="divider">
+    
+    <div class="footer">
+        <p>"Life is short, make it sweet!" 🍬</p>
+        <p>Thank you for visiting Happy Scoops!</p>
+        <p style="font-size: 12px; margin-top: 15px;">Please visit again!</p>
+    </div>
+</body>
+</html>
+        `;
+
+        const blob = new Blob([receiptHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Receipt-${lastOrder?.orderId}-${new Date().getTime()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     const renderCustomerInfo = () => (
         <div style={styles.body}>
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -46,23 +209,77 @@ const CartModal = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
+                <label style={styles.label}>Phone Number</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                        style={{ ...styles.input, flex: 1 }}
+                        type="tel"
+                        placeholder="e.g. 9876543210"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        onBlur={handlePhoneLookup}
+                    />
+                    <button
+                        style={styles.lookupBtn}
+                        onClick={handlePhoneLookup}
+                        disabled={lookingUp}
+                    >
+                        {lookingUp ? '...' : '🔍'}
+                    </button>
+                </div>
+            </div>
+
+            {customer && (
+                <div style={styles.loyaltyCard}>
+                    <div style={styles.loyaltyHeader}>
+                        <span>💎 Welcome back, {customer.name || 'Valued Customer'}!</span>
+                        {customer.vipTier !== 'regular' && (
+                            <span style={styles.vipBadge}>
+                                <Star size={14} /> {customer.vipTier.toUpperCase()}
+                            </span>
+                        )}
+                    </div>
+                    <div style={styles.loyaltyPoints}>
+                        <strong>{customer.points}</strong> points available
+                    </div>
+
+                    {CustomerService.getAvailableRewards(customer.points).length > 0 && (
+                        <div style={{ marginTop: '1rem' }}>
+                            <label style={styles.label}>🎁 Redeem Rewards:</label>
+                            <select
+                                style={styles.input}
+                                value={selectedReward || ''}
+                                onChange={(e) => handleRewardSelect(parseInt(e.target.value))}
+                            >
+                                <option value="">No reward (save points)</option>
+                                {CustomerService.getAvailableRewards(customer.points).map(reward => (
+                                    <option key={reward.points} value={reward.points}>
+                                        {reward.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {selectedReward && (
+                        <div style={styles.discountApplied}>
+                            ✅ Discount of ₹{discount} applied!
+                        </div>
+                    )}
+
+                    <div style={styles.pointsEarn}>
+                        This order: +{Math.floor(cartTotal + (cartTotal * 0.05) - discount)} points
+                    </div>
+                </div>
+            )}
+
+            <div style={{ marginBottom: '2rem' }}>
                 <label style={styles.label}>Your Name</label>
                 <input
                     style={styles.input}
                     placeholder="e.g. Rahul"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                />
-            </div>
-
-            <div style={{ marginBottom: '2rem' }}>
-                <label style={styles.label}>Phone Number</label>
-                <input
-                    style={styles.input}
-                    type="tel"
-                    placeholder="e.g. 9876543210"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
                 />
             </div>
 
@@ -81,7 +298,7 @@ const CartModal = () => {
     // GST Calculation Config
     const GST_RATE = 0.05; // 5%
     const gstAmount = Math.round(cartTotal * GST_RATE);
-    const grandTotal = cartTotal + gstAmount;
+    const grandTotal = cartTotal + gstAmount - discount;
 
     // UPI Link for Dynamic QR
     // VPA: shubhamreddy9172-2@okaxis
@@ -200,6 +417,7 @@ const CartModal = () => {
         <div style={styles.body}>
             <div style={styles.bill}>
                 <div style={styles.billHeader}>
+                    <img src={logo} alt="Happy Scoops" style={{ width: '120px', height: 'auto', marginBottom: '1rem', borderRadius: '8px' }} />
                     <h4>Happy Scoops Bowl 🍨</h4>
                     <p>Hinjawadi, Pune</p>
                     <p style={{ fontSize: '0.8rem' }}>GSTIN: 27ABCDE1234F1Z5</p>
@@ -252,6 +470,9 @@ const CartModal = () => {
                     <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Thank you for visiting Happy Scoops!</p>
                 </div>
             </div>
+            <button style={styles.downloadBtn} onClick={handleDownloadReceipt}>
+                <Download size={18} /> Download Receipt
+            </button>
             <button style={styles.closeMainBtn} onClick={handleClose}>Close & New Order</button>
         </div>
     );
@@ -484,6 +705,22 @@ const styles = {
         marginTop: '1.5rem',
         fontWeight: 600
     },
+    downloadBtn: {
+        background: '#4CAF50',
+        color: 'white',
+        width: '100%',
+        padding: '1rem',
+        borderRadius: '99px',
+        marginTop: '1rem',
+        fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem',
+        cursor: 'pointer',
+        border: 'none',
+        fontSize: '1rem'
+    },
     label: {
         display: 'block',
         marginBottom: '0.5rem',
@@ -498,6 +735,63 @@ const styles = {
         fontSize: '1rem',
         outline: 'none',
         background: 'var(--light)'
+    },
+    lookupBtn: {
+        padding: '1rem',
+        borderRadius: '12px',
+        border: '1px solid #ddd',
+        background: 'var(--primary)',
+        color: 'white',
+        cursor: 'pointer',
+        fontSize: '1.2rem'
+    },
+    loyaltyCard: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '1.5rem',
+        borderRadius: '16px',
+        marginBottom: '1.5rem',
+        boxShadow: '0 8px 16px rgba(102, 126, 234, 0.3)'
+    },
+    loyaltyHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '0.5rem',
+        fontSize: '1.1rem',
+        fontWeight: '600'
+    },
+    vipBadge: {
+        background: 'rgba(255, 215, 0, 0.3)',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '12px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+        border: '1px solid rgba(255, 215, 0, 0.5)'
+    },
+    loyaltyPoints: {
+        fontSize: '0.9rem',
+        marginBottom: '0.5rem',
+        opacity: 0.9
+    },
+    discountApplied: {
+        background: 'rgba(76, 175, 80, 0.2)',
+        padding: '0.75rem',
+        borderRadius: '8px',
+        marginTop: '1rem',
+        fontWeight: '600',
+        textAlign: 'center'
+    },
+    pointsEarn: {
+        marginTop: '1rem',
+        padding: '0.75rem',
+        background: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: '8px',
+        fontSize: '0.9rem',
+        textAlign: 'center'
     }
 };
 

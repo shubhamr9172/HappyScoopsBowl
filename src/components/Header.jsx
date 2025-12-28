@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import logo from '../assets/logo.jpg';
 
 const Header = () => {
     const { cartCount, setIsCartOpen } = useCart();
@@ -9,9 +10,9 @@ const Header = () => {
         <header style={styles.header}>
             <div style={styles.logo}>
                 <img
-                    src="/logos/logo_3d_glossy.png"
+                    src={logo}
                     alt="Happy Scoops"
-                    style={{ width: '45px', height: '45px', objectFit: 'contain' }}
+                    style={{ width: '60px', height: '60px', objectFit: 'contain', borderRadius: '8px' }}
                 />
                 <h1 style={{ ...styles.brand, fontSize: '1.5rem', margin: 0 }}>Happy Scoops</h1>
             </div>
