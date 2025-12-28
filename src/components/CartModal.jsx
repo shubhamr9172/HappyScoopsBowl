@@ -3,8 +3,9 @@ import { useCart } from '../context/CartContext';
 import { X, Trash2, ArrowRight, Gift, Star, Download } from 'lucide-react';
 import { OrderService } from '../services/orderService';
 import { CustomerService, REWARDS } from '../services/customerService';
+import { validateName, validatePhone, validateOrderData, rateLimiter, sanitizeInput } from '../utils/validation';
 import upiQr from '../assets/upi_qr.png';
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo.png';
 
 // This is a complex component handling Cart View, Checkout, Payment Simulation, and Bill Receipt.
 // For the sake of modularity, usually we split, but for this "Cart Modal" flow it's cohesive.
@@ -65,14 +66,29 @@ const CartModal = () => {
     };
 
     const handleCustomerSubmit = () => {
-        if (!customerName.trim() || customerName.trim().length < 2) {
-            alert("Please enter a valid name (at least 2 characters).");
+        // Validate name
+        try {
+            const validatedName = validateName(customerName);
+            setCustomerName(validatedName);
+        } catch (error) {
+            alert(error.message);
             return;
         }
-        if (!customerPhone.trim() || !/^\d{10}$/.test(customerPhone.trim())) {
-            alert("Please enter a valid 10-digit phone number.");
+
+        // Validate phone
+        const validatedPhone = validatePhone(customerPhone);
+        if (!validatedPhone) {
+            alert('Please enter a valid 10-digit phone number');
             return;
         }
+        setCustomerPhone(validatedPhone);
+
+        // Check rate limit
+        if (!rateLimiter.isAllowed(validatedPhone, 3, 300000)) { // 3 orders per 5 minutes
+            alert('Too many orders. Please wait a few minutes before ordering again.');
+            return;
+        }
+
         setStep('PAYMENT');
     };
 
@@ -88,12 +104,12 @@ const CartModal = () => {
     <meta charset="UTF-8">
     <title>Receipt - ${lastOrder?.orderId}</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; }
-        .logo { text-align: center; margin-bottom: 20px; }
-        .logo img { width: 200px; height: auto; }
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; background: white; }
+        .logo { text-align: center; margin-bottom: 10px; }
+        .logo img { width: 150px; height: auto; display: block; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { margin: 0; color: #FF6B9D; }
-        .header p { margin: 5px 0; color: #666; font-size: 14px; }
+        .header h2 { margin: 5px 0; color: #8B4513; font-size: 20px; }
+        .header p { margin: 3px 0; color: #666; font-size: 13px; }
         .token { text-align: center; background: #FFF0F5; padding: 20px; margin: 20px 0; border-radius: 12px; }
         .token-label { font-size: 12px; color: #666; }
         .token-num { font-size: 48px; font-weight: bold; color: #FF6B9D; }
@@ -112,6 +128,7 @@ const CartModal = () => {
     </div>
     
     <div class="header">
+        <h2>Happy Scoops Bowl 🍨</h2>
         <p>Hinjawadi, Pune</p>
         <p>GSTIN: 27ABCDE1234F1Z5</p>
         <p>Date: ${new Date().toLocaleString()}</p>
@@ -417,8 +434,8 @@ const CartModal = () => {
         <div style={styles.body}>
             <div style={styles.bill}>
                 <div style={styles.billHeader}>
-                    <img src={logo} alt="Happy Scoops" style={{ width: '120px', height: 'auto', marginBottom: '1rem', borderRadius: '8px' }} />
-                    <h4>Happy Scoops Bowl 🍨</h4>
+                    <img src={logo} alt="Happy Scoops" style={{ width: '100px', height: 'auto', marginBottom: '0.5rem', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+                    <h4 style={{ margin: '0.5rem 0' }}>Happy Scoops Bowl 🍨</h4>
                     <p>Hinjawadi, Pune</p>
                     <p style={{ fontSize: '0.8rem' }}>GSTIN: 27ABCDE1234F1Z5</p>
                 </div>
