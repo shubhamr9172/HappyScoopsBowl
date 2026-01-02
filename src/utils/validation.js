@@ -115,6 +115,13 @@ class RateLimiter {
     reset(key) {
         this.actions.delete(key);
     }
+
+    /**
+     * Clear all rate limits (useful for development/testing)
+     */
+    clearAll() {
+        this.actions.clear();
+    }
 }
 
 // Export singleton instance

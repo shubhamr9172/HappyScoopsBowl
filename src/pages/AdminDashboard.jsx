@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { OrderService } from '../services/orderService';
 import { NotificationService } from '../services/notificationService';
 import { InventoryService } from '../services/inventoryService';
-import { RefreshCw, CheckCircle, Clock, ChefHat, Bell, Volume2, VolumeX, Package } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { RefreshCw, CheckCircle, Clock, ChefHat, Bell, Volume2, VolumeX, Package, LogOut } from 'lucide-react';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
+    const { isAuthenticated, login, logout } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [pinInput, setPinInput] = useState('');
     const [loginError, setLoginError] = useState('');
     const [isMuted, setIsMuted] = useState(false);
@@ -47,6 +50,18 @@ const AdminDashboard = () => {
     const handleToggleMute = () => {
         const newMuteState = NotificationService.toggleMute();
         setIsMuted(newMuteState);
+    };
+
+    const handleLogin = () => {
+        const success = login(pinInput);
+        if (!success) {
+            setLoginError('Incorrect PIN');
+        }
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/admin');
     };
 
     if (!isAuthenticated) {
@@ -95,10 +110,7 @@ const AdminDashboard = () => {
                             setLoginError('');
                         }}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                if (pinInput === 'Shubham@&9172') setIsAuthenticated(true);
-                                else setLoginError('Incorrect PIN');
-                            }
+                            if (e.key === 'Enter') handleLogin();
                         }}
                         placeholder="Enter Owner PIN"
                         style={{
@@ -111,10 +123,7 @@ const AdminDashboard = () => {
                         }}
                     />
                     <button
-                        onClick={() => {
-                            if (pinInput === 'Shubham@&9172') setIsAuthenticated(true);
-                            else setLoginError('Incorrect PIN');
-                        }}
+                        onClick={handleLogin}
                         style={{
                             ...styles.payBtn,
                             width: '100%',
@@ -179,9 +188,14 @@ const AdminDashboard = () => {
                         <h2 style={styles.title}>Admin Dashboard</h2>
                         <div style={styles.badge}>🛡️</div>
                     </div>
-                    <button style={styles.muteBtn} onClick={handleToggleMute} title={isMuted ? "Unmute" : "Mute"}>
-                        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button style={styles.muteBtn} onClick={handleToggleMute} title={isMuted ? "Unmute" : "Mute"}>
+                            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                        </button>
+                        <button style={styles.logoutBtn} onClick={handleLogout} title="Logout">
+                            <LogOut size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 <div style={styles.navGrid}>
@@ -389,6 +403,18 @@ const styles = {
         padding: '0.75rem',
         background: 'rgba(102, 126, 234, 0.1)',
         color: '#667eea',
+        border: 'none',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.3s ease'
+    },
+    logoutBtn: {
+        padding: '0.75rem',
+        background: 'rgba(239, 68, 68, 0.1)',
+        color: '#ef4444',
         border: 'none',
         borderRadius: '12px',
         cursor: 'pointer',

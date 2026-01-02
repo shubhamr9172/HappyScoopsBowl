@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import CustomerHome from './pages/CustomerHome';
 import AdminDashboard from './pages/AdminDashboard';
 import Analytics from './pages/Analytics';
@@ -34,9 +36,30 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<CustomerHome />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/analytics" element={<Analytics />} />
-            <Route path="/admin/inventory" element={<Inventory />} />
-            <Route path="/kitchen" element={<KitchenDisplay />} />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/inventory"
+              element={
+                <ProtectedRoute>
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen"
+              element={
+                <ProtectedRoute>
+                  <KitchenDisplay />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </div>
@@ -46,11 +69,13 @@ function AppContent() {
 
 function App() {
   return (
-    <CartProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

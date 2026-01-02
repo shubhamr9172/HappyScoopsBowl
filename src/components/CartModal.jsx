@@ -8,6 +8,7 @@ import { calculateComboDiscount, checkComboQualification, getUpsellSuggestions, 
 import UpsellModal from './UpsellModal';
 import upiQr from '../assets/upi_qr.png';
 import logo from '../assets/logo.png';
+import html2pdf from 'html2pdf.js';
 
 // This is a complex component handling Cart View, Checkout, Payment Simulation, and Bill Receipt.
 // For the sake of modularity, usually we split, but for this "Cart Modal" flow it's cohesive.
@@ -109,19 +110,21 @@ const CartModal = () => {
         }
         setCustomerPhone(validatedPhone);
 
-        // Check rate limit
-        if (!rateLimiter.isAllowed(validatedPhone, 3, 300000)) { // 3 orders per 5 minutes
+        // Check rate limit (relaxed for testing and high-volume customers
+        if (!rateLimiter.isAllowed(validatedPhone, 10, 300000)) { // 10 orders per 5 minutes
             setFormError('Too many orders. Please wait a few minutes before ordering again.');
             return;
         }
 
-        // Show upsell modal before payment
-        setShowUpsellModal(true);
+        // Skip upsell modal and go directly to payment
+        setStep('PAYMENT');
     };
 
     // Handle upsell modal actions
-    const handleAddUpsell = (upsell) => {
-        setUpsellItems(prev => [...prev, upsell]);
+    const handleAddUpsell = (item) => {
+        addToCart(item);
+        setShowUpsellModal(false);
+        setStep('PAYMENT');
     };
 
     const handleSkipUpsell = () => {
@@ -162,7 +165,7 @@ const CartModal = () => {
         }
     };
 
-    const generateReceipt = (logoSrc) => {
+    const generateReceipt = async (logoSrc) => {
         const receiptHTML = `
 <!DOCTYPE html>
 <html>
@@ -449,15 +452,43 @@ const CartModal = () => {
 </body>
 </html>
 `;
-        const blob = new Blob([receiptHTML], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Receipt - ${lastOrder?.orderId} -${new Date().getTime()}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Create a temporary div to hold the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = receiptHTML;
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
+
+        // Configure PDF options
+        const opt = {
+            margin: 10,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+        };
+
+        try {
+            // Generate PDF blob instead of directly saving
+            const pdfBlob = await html2pdf()
+                .set(opt)
+                .from(tempDiv.querySelector('.receipt-container'))
+                .outputPdf('blob');
+
+            // Create download link with proper filename
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Receipt-${lastOrder?.orderId || 'order'}-${new Date().getTime()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } finally {
+            // Clean up - remove temporary div
+            document.body.removeChild(tempDiv);
+        }
     };
 
     const renderCustomerInfo = () => (
@@ -589,7 +620,10 @@ const CartModal = () => {
             totalAmount: grandTotal,
             customerName,
             customerPhone,
-            customerNote: "Self-Order via Web"
+            customerNote: "Self-Order via Web",
+            paymentStatus: "PENDING", // Security: Payment not verified yet
+            redeemedPoints: selectedReward || 0, // Store points to deduct later
+            discount: discount || 0 // Store discount amount
         };
 
         try {
@@ -598,14 +632,28 @@ const CartModal = () => {
 
             const createdOrder = await OrderService.createOrder(orderData);
 
-            // Award Loyalty Points
-            let pointsSummary = null;
+            // SECURITY FIX: Loyalty points will be awarded ONLY when staff verifies payment
+            // This prevents users from clicking "Confirm Payment" without actually paying
+            // Points are now awarded in KitchenDisplay when staff clicks "Verify Payment"
+
+            // Note: Customer still sees success screen - UX unchanged
+            // The earned points shown on receipt will be calculated but not actually awarded yet
+
+            // Calculate what points WOULD be earned (for display purposes only)
             if (customerPhone) {
                 try {
-                    pointsSummary = await CustomerService.awardPoints(customerPhone, grandTotal, createdOrder.orderId);
-                    setEarnedPointsData(pointsSummary);
+                    // Get customer to show current points on receipt
+                    const cust = await CustomerService.getOrCreateCustomer(customerPhone, customerName);
+                    setCustomer(cust);
+
+                    // Calculate potential points for display (not actually awarded)
+                    const potentialPoints = {
+                        pointsEarned: Math.floor(grandTotal),
+                        bonusPoints: 0
+                    };
+                    setEarnedPointsData(potentialPoints);
                 } catch (err) {
-                    console.error("Failed to award points", err);
+                    console.error("Failed to fetch customer for display", err);
                 }
             }
 
@@ -929,7 +977,9 @@ const styles = {
         background: 'rgba(0,0,0,0.5)',
         zIndex: 1000,
         display: 'flex',
-        alignItems: 'flex-end' // Bottom sheet style
+        alignItems: 'flex-end', // Bottom sheet style
+        overflow: 'hidden', // Prevent background scrolling
+        overscrollBehavior: 'contain' // Prevent scroll chaining
     },
     modal: {
         background: 'var(--bg-light)',

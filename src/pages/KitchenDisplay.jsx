@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { OrderService } from '../services/orderService';
+import { CustomerService } from '../services/customerService';
 import { NotificationService } from '../services/notificationService';
-import { Volume2, VolumeX, Settings } from 'lucide-react';
+import { Volume2, VolumeX, Settings, CheckCircle } from 'lucide-react';
 
 const KitchenDisplay = () => {
     const [orders, setOrders] = useState([]);
@@ -31,6 +32,47 @@ const KitchenDisplay = () => {
 
     const handleStatusUpdate = async (orderId, newStatus) => {
         await OrderService.updateOrderStatus(orderId, newStatus);
+    };
+
+    // SECURITY: Verify payment and award loyalty points
+    const handleVerifyPayment = async (order) => {
+        try {
+            // 1. Update payment status to VERIFIED
+            await OrderService.updatePaymentStatus(order.id, 'VERIFIED');
+
+            // 2. Handle loyalty points (redeem + award)
+            if (order.customerPhone && order.totalAmount) {
+                try {
+                    // First: Deduct redeemed points if any
+                    if (order.redeemedPoints && order.redeemedPoints > 0) {
+                        await CustomerService.redeemPoints(
+                            order.customerPhone,
+                            order.redeemedPoints
+                        );
+                        console.log(`Deducted ${order.redeemedPoints} points for order ${order.orderId}`);
+                    }
+
+                    // Then: Award new points from this purchase
+                    await CustomerService.awardPoints(
+                        order.customerPhone,
+                        order.totalAmount,
+                        order.orderId
+                    );
+                    console.log(`Points awarded for order ${order.orderId}`);
+                } catch (err) {
+                    console.error('Failed to process loyalty points:', err);
+                    // Continue even if points processing fails - payment is verified
+                }
+            }
+
+            // Notification sound for verified payment
+            if (!isMuted) {
+                new Audio('/notification.mp3').play().catch(() => { });
+            }
+        } catch (error) {
+            console.error('Failed to verify payment:', error);
+            alert('Failed to verify payment. Please try again.');
+        }
     };
 
     if (loading) {
@@ -115,9 +157,32 @@ const KitchenDisplay = () => {
                                     ))}
                                 </div>
 
+                                {/* Payment Status Badge */}
+                                {order.paymentStatus === 'PENDING' && (
+                                    <div style={styles.paymentWarning}>
+                                        ⚠️ VERIFY PAYMENT: ₹{order.totalAmount}
+                                    </div>
+                                )}
+                                {order.paymentStatus === 'VERIFIED' && (
+                                    <div style={styles.paymentVerified}>
+                                        <CheckCircle size={16} /> Payment Verified
+                                    </div>
+                                )}
+
                                 {/* Status Actions */}
                                 <div style={styles.actions}>
-                                    {order.orderStatus === 'CREATED' && (
+                                    {/* Payment Verification Button */}
+                                    {order.paymentStatus === 'PENDING' && (
+                                        <button
+                                            style={styles.verifyBtn}
+                                            onClick={() => handleVerifyPayment(order)}
+                                        >
+                                            ✅ Verified ₹{order.totalAmount}
+                                        </button>
+                                    )}
+
+                                    {/* Only allow START PREP after payment verified */}
+                                    {order.orderStatus === 'CREATED' && order.paymentStatus === 'VERIFIED' && (
                                         <button
                                             style={styles.startBtn}
                                             onClick={() => handleStatusUpdate(order.id, 'PREPARING')}
@@ -125,6 +190,14 @@ const KitchenDisplay = () => {
                                             ▶️ START PREP
                                         </button>
                                     )}
+
+                                    {/* Show locked message if trying to prep before verification */}
+                                    {order.orderStatus === 'CREATED' && order.paymentStatus !== 'VERIFIED' && order.paymentStatus !== 'PENDING' && (
+                                        <div style={styles.lockedMessage}>
+                                            🔒 Awaiting Payment Verification
+                                        </div>
+                                    )}
+
                                     {order.orderStatus === 'PREPARING' && (
                                         <button
                                             style={styles.readyBtn}
@@ -352,6 +425,56 @@ const styles = {
         fontSize: '0.75rem',
         color: '#999',
         marginTop: '0.5rem'
+    },
+    paymentWarning: {
+        padding: '0.75rem 1rem',
+        background: 'linear-gradient(135deg, #FFF3CD 0%, #FFE17B 100%)',
+        color: '#856404',
+        borderRadius: '12px',
+        textAlign: 'center',
+        fontWeight: '700',
+        fontSize: '0.95rem',
+        marginBottom: '0.5rem',
+        border: '2px solid #FFC107',
+        animation: 'pulse 2s infinite'
+    },
+    paymentVerified: {
+        padding: '0.5rem 1rem',
+        background: '#d1fae5',
+        color: '#065f46',
+        borderRadius: '8px',
+        textAlign: 'center',
+        fontWeight: '600',
+        fontSize: '0.85rem',
+        marginBottom: '0.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem'
+    },
+    verifyBtn: {
+        width: '100%',
+        padding: '1rem',
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        color: 'white',
+        border: 'none',
+        borderRadius: '16px',
+        fontSize: '1.1rem',
+        fontWeight: '700',
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        marginBottom: '0.5rem'
+    },
+    lockedMessage: {
+        width: '100%',
+        padding: '1rem',
+        background: '#f1f5f9',
+        color: '#64748b',
+        borderRadius: '12px',
+        fontSize: '0.95rem',
+        fontWeight: '600',
+        textAlign: 'center'
     }
 };
 
