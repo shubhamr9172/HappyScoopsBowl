@@ -227,9 +227,10 @@ const styles = {
     container: {
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '1rem',
-        background: '#f4f4f4',
-        minHeight: '100vh'
+        padding: '2rem',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        minHeight: '100vh',
+        fontFamily: "'Outfit', sans-serif"
     },
     loading: {
         textAlign: 'center',
@@ -240,7 +241,12 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '1.5rem'
+        marginBottom: '2rem',
+        background: 'rgba(255,255,255,0.8)',
+        padding: '1.5rem',
+        borderRadius: '20px',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
     },
     backLink: {
         color: '#2196F3',
@@ -268,7 +274,7 @@ const styles = {
         flex: 1,
         padding: '0.75rem',
         borderRadius: '8px',
-        background: 'var(--dark)',
+        background: 'var(--text-dark)',
         color: 'white',
         border: 'none',
         cursor: 'pointer',
@@ -281,12 +287,13 @@ const styles = {
         marginBottom: '1.5rem'
     },
     metricCard: {
-        background: 'white',
+        background: 'rgba(255,255,255,0.9)',
         padding: '1.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        borderRadius: '20px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
         display: 'flex',
-        gap: '1rem'
+        gap: '1rem',
+        transition: 'transform 0.2s ease'
     },
     metricIcon: {
         width: '48px',
@@ -305,7 +312,7 @@ const styles = {
     metricValue: {
         fontSize: '1.75rem',
         fontWeight: '700',
-        color: 'var(--dark)',
+        color: 'var(--text-dark)',
         marginBottom: '0.25rem'
     },
     metricChange: {
@@ -320,10 +327,10 @@ const styles = {
     },
     chartCard: {
         background: 'white',
-        padding: '1.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        marginBottom: '1.5rem'
+        padding: '2rem',
+        borderRadius: '24px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+        marginBottom: '2rem'
     },
     chartTitle: {
         marginBottom: '1.5rem',
@@ -375,10 +382,10 @@ const styles = {
     },
     section: {
         background: 'white',
-        padding: '1.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        marginBottom: '1.5rem'
+        padding: '2rem',
+        borderRadius: '24px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+        marginBottom: '2rem'
     },
     sectionTitle: {
         marginBottom: '1rem',

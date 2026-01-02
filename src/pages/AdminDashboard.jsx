@@ -315,11 +315,12 @@ const AdminDashboard = () => {
 
 const styles = {
     container: {
-        maxWidth: '600px',
+        maxWidth: '800px',
         margin: '0 auto',
-        padding: '1rem',
-        background: 'linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%)',
-        minHeight: '100vh'
+        padding: '2rem',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        minHeight: '100vh',
+        fontFamily: "'Outfit', sans-serif"
     },
     header: {
         marginBottom: '1.5rem',
@@ -341,11 +342,12 @@ const styles = {
     },
     title: {
         margin: 0,
-        fontSize: '1.5rem',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        fontSize: '2rem',
+        background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
-        fontWeight: '700'
+        fontWeight: '800',
+        letterSpacing: '-1px'
     },
     badge: {
         fontSize: '1.5rem',
@@ -358,11 +360,14 @@ const styles = {
         marginBottom: '1.25rem'
     },
     navCard: {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '1rem',
+        background: 'rgba(255, 255, 255, 0.7)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.8)',
+        padding: '1.25rem',
         borderRadius: '16px',
         textDecoration: 'none',
-        color: 'white',
+        textDecoration: 'none',
+        color: '#2c3e50',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -451,12 +456,12 @@ const styles = {
         gap: '1rem'
     },
     card: {
-        background: 'white',
-        borderRadius: '16px',
-        padding: '1.25rem',
-        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)',
-        border: '1px solid rgba(102, 126, 234, 0.1)',
-        transition: 'all 0.3s ease'
+        background: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: '24px',
+        padding: '1.5rem',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+        border: '1px solid white',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     },
     cardHeader: {
         display: 'flex',
@@ -545,7 +550,7 @@ const styles = {
         flex: 1,
         padding: '0.6rem',
         borderRadius: '8px',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
         color: 'white',
         display: 'flex',
         justifyContent: 'center',

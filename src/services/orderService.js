@@ -14,8 +14,18 @@ const COLLECTION_NAME = "orders";
 // The requirement says "1-99 loop".
 // Let's rely on the Admin Dashboard to just see the token. 
 // A simple client-side generator:
-const generateToken = () => {
-    return Math.floor(Math.random() * 99) + 1;
+// Helper to generate a sequential daily token (1-99 loop)
+const getNextToken = () => {
+    try {
+        const lastToken = parseInt(localStorage.getItem('last_token_num') || '0');
+        let newToken = lastToken + 1;
+        if (newToken > 99) newToken = 1;
+        localStorage.setItem('last_token_num', newToken.toString());
+        return newToken;
+    } catch (e) {
+        // Fallback for extreme errors
+        return Math.floor(Math.random() * 99) + 1;
+    }
 };
 
 // Helper to check if Firebase is configured
@@ -37,7 +47,7 @@ export const OrderService = {
         if (!isFirebaseConfigured()) {
             console.warn("Firebase not configured. Using LocalStorage fallback.");
             const localOrders = JSON.parse(localStorage.getItem('local_orders') || '[]');
-            const orderToken = generateToken(); // Generate token once
+            const orderToken = getNextToken(); // Generate sequential token
             const newOrder = {
                 id: `local-${Date.now()}`,
                 ...orderData,
@@ -60,7 +70,7 @@ export const OrderService = {
             // Generate a readable unique order ID
             // Format: HS-{Random4}-{Random4} for uniqueness and readability
             const humanReadableId = `HS-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
-            const orderToken = generateToken(); // Generate token once
+            const orderToken = getNextToken(); // Generate sequential token
 
             const docRef = await addDoc(collection(db, COLLECTION_NAME), {
                 ...orderData,
@@ -80,7 +90,7 @@ export const OrderService = {
             // LocalStorage Fallback
             const localOrders = JSON.parse(localStorage.getItem('local_orders') || '[]');
             const humanReadableId = `HS-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
-            const orderToken = generateToken(); // Generate token once
+            const orderToken = getNextToken(); // Generate sequential token
             const newOrder = {
                 id: `local-${Date.now()}`,
                 orderId: humanReadableId,

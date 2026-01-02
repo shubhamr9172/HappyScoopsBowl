@@ -39,7 +39,7 @@ const SplashScreen = ({ onFinish }) => {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
             zIndex: 9999,
             padding: '3rem 2rem',
             overflow: 'auto',
@@ -58,7 +58,7 @@ const SplashScreen = ({ onFinish }) => {
             width: '220px',
             height: 'auto',
             marginBottom: '1.5rem',
-            filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
+            filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.2))',
             animation: 'float 3s ease-in-out infinite',
             display: 'block',
             marginLeft: 'auto',
@@ -67,20 +67,24 @@ const SplashScreen = ({ onFinish }) => {
             transition: 'opacity 0.5s ease-in 0.2s'
         },
         title: {
-            fontSize: '2rem',
-            color: 'white',
-            fontWeight: '700',
-            marginBottom: '0.75rem',
-            textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            fontSize: '2.5rem',
+            background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: '800',
+            marginBottom: '1rem',
+            textShadow: 'none',
             lineHeight: '1.2',
             opacity: fadeIn ? 1 : 0,
             transition: 'opacity 0.5s ease-in 0.3s'
         },
         subtitle: {
-            fontSize: '1rem',
-            color: 'rgba(255,255,255,0.95)',
-            marginBottom: '2.5rem',
-            fontWeight: '400',
+            fontSize: '0.9rem',
+            color: '#95a5a6',
+            marginBottom: '3rem',
+            fontWeight: '600',
+            letterSpacing: '3px',
+            textTransform: 'uppercase',
             opacity: fadeIn ? 1 : 0,
             transition: 'opacity 0.5s ease-in 0.4s'
         },
@@ -94,30 +98,30 @@ const SplashScreen = ({ onFinish }) => {
             transition: 'opacity 0.5s ease-in 0.5s'
         },
         customerBtn: {
-            background: 'white',
-            color: '#667eea',
-            padding: '1.5rem 2rem',
-            borderRadius: '16px',
+            background: 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)',
+            color: 'white',
+            padding: '1.25rem 2.5rem',
+            borderRadius: '50px',
             border: 'none',
-            fontSize: '1.2rem',
+            fontSize: '1.1rem',
             fontWeight: '600',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.75rem',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-            transition: 'all 0.3s ease',
+            boxShadow: '0 10px 20px rgba(44, 62, 80, 0.3)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: 'translateY(0)'
         },
         staffBtn: {
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            padding: '1.25rem 2rem',
-            borderRadius: '16px',
-            border: '2px solid rgba(255,255,255,0.4)',
-            fontSize: '1rem',
-            fontWeight: '500',
+            background: 'rgba(255,255,255,0.6)',
+            color: '#7f8c8d',
+            padding: '1rem 2rem',
+            borderRadius: '50px',
+            border: '1px solid rgba(0,0,0,0.1)',
+            fontSize: '0.95rem',
+            fontWeight: '600',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -127,9 +131,9 @@ const SplashScreen = ({ onFinish }) => {
             transition: 'all 0.3s ease'
         },
         footer: {
-            color: 'rgba(255,255,255,0.8)',
-            fontSize: '0.85rem',
-            fontWeight: '300',
+            color: '#95a5a6',
+            fontSize: '0.8rem',
+            fontWeight: '500',
             opacity: fadeIn ? 1 : 0,
             transition: 'opacity 0.5s ease-in 0.6s'
         }
@@ -140,13 +144,18 @@ const SplashScreen = ({ onFinish }) => {
             <style>
                 {`
                     @keyframes float {
-                        0%, 100% { transform: translateY(0px); }
-                        50% { transform: translateY(-15px); }
+                        0%, 100% { transform: translateY(0px); filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
+                        50% { transform: translateY(-10px); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15)); }
                     }
                     
+                    @keyframes pulse-glow {
+                        0%, 100% { box-shadow: 0 10px 30px rgba(44, 62, 80, 0.3); }
+                        50% { box-shadow: 0 15px 40px rgba(52, 152, 219, 0.4); }
+                    }
+
                     .customer-btn:hover {
-                        transform: translateY(-5px) !important;
-                        box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important;
+                        transform: translateY(-4px) !important;
+                        box-shadow: 0 15px 35px rgba(44, 62, 80, 0.4) !important;
                     }
                     
                     .customer-btn:active {
@@ -154,8 +163,9 @@ const SplashScreen = ({ onFinish }) => {
                     }
                     
                     .staff-btn:hover {
-                        background: rgba(255,255,255,0.3) !important;
-                        border-color: rgba(255,255,255,0.6) !important;
+                        background: rgba(255, 255, 255, 0.8) !important;
+                        border-color: #2c3e50 !important;
+                        color: #2c3e50 !important;
                     }
                     
                     .staff-btn:active {
@@ -165,9 +175,9 @@ const SplashScreen = ({ onFinish }) => {
             </style>
 
             <div style={styles.content}>
-                <img src={logo} alt="Happy Scoops" style={styles.logo} />
+                <img src={logo} alt="The Dreamy Bowl" style={styles.logo} />
 
-                <h1 style={styles.title}>Welcome to<br />Happy Scoops! 🍨</h1>
+                <h1 style={styles.title}>Welcome to<br />The Dreamy Bowl!</h1>
                 <p style={styles.subtitle}>Delicious desserts made with love</p>
 
                 <div style={styles.buttonsContainer}>
@@ -176,7 +186,7 @@ const SplashScreen = ({ onFinish }) => {
                         style={styles.customerBtn}
                         onClick={handleCustomerStart}
                     >
-                        <ShoppingBag size={24} />
+                        <ShoppingBag size={22} />
                         <span>Order Now</span>
                     </button>
 
@@ -194,7 +204,7 @@ const SplashScreen = ({ onFinish }) => {
                     Tap "Order Now" to browse our menu
                 </p>
             </div>
-        </div>
+        </div >
     );
 };
 

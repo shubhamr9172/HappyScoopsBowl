@@ -1,22 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
-import Hero from '../components/Hero';
+import MiniBanner from '../components/MiniBanner';
 import ComboList from '../components/ComboList';
 import BowlBuilder from '../components/BowlBuilder';
 import CartModal from '../components/CartModal';
 
 const CustomerHome = () => {
-    const scrollToBuilder = () => {
-        const el = document.getElementById('builder');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    const [activeTab, setActiveTab] = useState('combo');
+
+    const handleBannerClick = () => {
+        setActiveTab('combo');
+        // Small timeout to ensure state update processes before scroll (if needed)
+        setTimeout(() => {
+            const el = document.getElementById('combos');
+            if (el) {
+                // Scroll with offset for sticky header
+                const headerOffset = 100;
+                const elementPosition = el.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            }
+        }, 50);
     };
 
     return (
-        <div style={{ background: 'var(--light)', minHeight: '100vh' }}>
+        <div style={{ background: 'var(--bg-dark)', minHeight: '100vh' }}>
             <Header />
-            <Hero onCtaClick={scrollToBuilder} />
-            <ComboList />
-            <BowlBuilder />
+            <MiniBanner onBannerClick={handleBannerClick} />
+            <div style={{ paddingTop: '1rem' }}></div>
+            <ComboList activeTab={activeTab} setActiveTab={setActiveTab} />
             <CartModal />
 
             {/* Footer Spacer */}

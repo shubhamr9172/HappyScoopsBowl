@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { X, Trash2, ArrowRight, Gift, Star, Download } from 'lucide-react';
+import { X, Trash2, ArrowRight, Gift, Star, Download, TrendingUp, Sparkles } from 'lucide-react';
 import { OrderService } from '../services/orderService';
 import { CustomerService, REWARDS } from '../services/customerService';
 import { validateName, validatePhone, validateOrderData, rateLimiter, sanitizeInput } from '../utils/validation';
+import { calculateComboDiscount, checkComboQualification, getUpsellSuggestions, getCartUpsellTip } from '../utils/pricingUtils';
+import UpsellModal from './UpsellModal';
 import upiQr from '../assets/upi_qr.png';
 import logo from '../assets/logo.png';
 
@@ -11,12 +13,13 @@ import logo from '../assets/logo.png';
 // For the sake of modularity, usually we split, but for this "Cart Modal" flow it's cohesive.
 
 const CartModal = () => {
-    const { isCartOpen, setIsCartOpen, cartItems, removeFromCart, cartTotal, clearCart } = useCart();
+    const { isCartOpen, setIsCartOpen, cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
 
     // Checkout States
-    // steps: 'CART' -> 'CUSTOMER_INFO' -> 'PAYMENT' -> 'SUCCESS'
+    // steps: 'CART' -> 'CUSTOMER_INFO' -> 'UPSELL' -> 'PAYMENT' -> 'SUCCESS'
     const [step, setStep] = useState('CART');
     const [loading, setLoading] = useState(false);
+    const [formError, setFormError] = useState(null);
     const [lastOrder, setLastOrder] = useState(null);
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
@@ -27,6 +30,27 @@ const CartModal = () => {
     const [discount, setDiscount] = useState(0);
     const [lookingUp, setLookingUp] = useState(false);
     const [earnedPointsData, setEarnedPointsData] = useState(null);
+
+    // Pricing & Upsell States
+    const [upsellItems, setUpsellItems] = useState([]);
+    const [showUpsellModal, setShowUpsellModal] = useState(false);
+    const [comboDiscount, setComboDiscount] = useState(null);
+    const [comboHint, setComboHint] = useState(null);
+    const [upsellTip, setUpsellTip] = useState(null);
+    const [upsellSuggestion, setUpsellSuggestion] = useState(null);
+
+    // Calculate combo discount whenever cart changes
+    useEffect(() => {
+        const discount = calculateComboDiscount(cartItems);
+        setComboDiscount(discount);
+
+        const hint = checkComboQualification(cartItems);
+        setComboHint(hint);
+
+        // Update Upsell Tip
+        const tip = getCartUpsellTip(cartItems);
+        setUpsellTip(tip);
+    }, [cartItems]);
 
     // Close Handler
     const handleClose = () => {
@@ -67,29 +91,41 @@ const CartModal = () => {
     };
 
     const handleCustomerSubmit = () => {
+        setFormError(null);
         // Validate name
         try {
             const validatedName = validateName(customerName);
             setCustomerName(validatedName);
         } catch (error) {
-            alert(error.message);
+            setFormError(error.message);
             return;
         }
 
         // Validate phone
         const validatedPhone = validatePhone(customerPhone);
         if (!validatedPhone) {
-            alert('Please enter a valid 10-digit phone number');
+            setFormError('Please enter a valid 10-digit phone number');
             return;
         }
         setCustomerPhone(validatedPhone);
 
         // Check rate limit
         if (!rateLimiter.isAllowed(validatedPhone, 3, 300000)) { // 3 orders per 5 minutes
-            alert('Too many orders. Please wait a few minutes before ordering again.');
+            setFormError('Too many orders. Please wait a few minutes before ordering again.');
             return;
         }
 
+        // Show upsell modal before payment
+        setShowUpsellModal(true);
+    };
+
+    // Handle upsell modal actions
+    const handleAddUpsell = (upsell) => {
+        setUpsellItems(prev => [...prev, upsell]);
+    };
+
+    const handleSkipUpsell = () => {
+        setShowUpsellModal(false);
         setStep('PAYMENT');
     };
 
@@ -325,8 +361,8 @@ const CartModal = () => {
 <body>
     <div class="receipt-container">
         <div class="logo-section">
-            <img src="${logoSrc}" alt="Happy Scoops Logo" />
-            <div class="brand-name">Happy Scoops</div>
+            <img src="${logoSrc}" alt="The Dreamy Bowl Logo" />
+            <div class="brand-name">The Dreamy Bowl</div>
             <div class="business-info">
                 Hinjawadi, Pune<br>
                 GSTIN: 27ABCDE1234F1Z5<br>
@@ -358,12 +394,12 @@ const CartModal = () => {
         
         <div class="items-section">
             <div class="section-title">Order Items</div>
-            ${lastOrder?.items?.map(item => `
-                <div class="item-row">
-                    <span class="item-name">${item.name}</span>
-                    <span class="item-price">₹${item.price}</span>
-                </div>
-            `).join('')}
+             ${lastOrder?.items?.map(item => `
+                 <div class="item-row">
+                     <span class="item-name">${item.name} <small style="color:#666">x${item.quantity || 1}</small></span>
+                     <span class="item-price">₹${item.price * (item.quantity || 1)}</span>
+                 </div>
+             `).join('')}
         </div>
         
         <hr class="solid-divider">
@@ -406,7 +442,7 @@ const CartModal = () => {
         
         <div class="footer">
             <div class="tagline">"Life is short, make it sweet!" 🍨</div>
-            <div class="thank-you">Thank you for visiting Happy Scoops!</div>
+            <div class="thank-you">Thank you for visiting The Dreamy Bowl!</div>
             <div class="visit-again">Please visit again!</div>
         </div>
     </div>
@@ -505,6 +541,22 @@ const CartModal = () => {
                     onChange={(e) => setCustomerName(e.target.value)}
                 />
             </div>
+            {formError && (
+                <div style={{
+                    color: '#e53e3e',
+                    background: '#fff5f5',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    border: '1px solid #fed7d7'
+                }}>
+                    ⚠️ {formError}
+                </div>
+            )}
 
             <button style={styles.checkoutBtn} onClick={handleCustomerSubmit}>
                 Continue to Payment <ArrowRight size={18} />
@@ -525,7 +577,7 @@ const CartModal = () => {
 
     // UPI Link for Dynamic QR
     // VPA: shubhamreddy9172-2@okaxis
-    const upiLink = `upi://pay?pa=shubhamreddy9172-2@okaxis&pn=HappyScoops&am=${grandTotal}&cu=INR`;
+    const upiLink = `upi://pay?pa=shubhamreddy9172-2@okaxis&pn=TheDreamyBowl&am=${grandTotal}&cu=INR`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiLink)}`;
 
     const handleConfirmPayment = async () => {
@@ -573,6 +625,38 @@ const CartModal = () => {
     const renderCartList = () => (
         <>
             <div style={styles.body}>
+                {/* Dreamy Tip Alert */}
+                {upsellTip && (
+                    <div style={{
+                        background: 'linear-gradient(135deg, #121212 0%, #1E1E1E 100%)',
+                        border: '1px solid #FFD700',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        marginBottom: '16px',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'start',
+                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.15)'
+                    }}>
+                        <div style={{
+                            background: 'rgba(255, 215, 0, 0.2)',
+                            padding: '8px',
+                            borderRadius: '50%',
+                            color: '#FFD700'
+                        }}>
+                            <Sparkles size={18} />
+                        </div>
+                        <div>
+                            <div style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '4px' }}>
+                                Dreamy Tip 🌙
+                            </div>
+                            <div style={{ color: '#e0e0e0', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                                {upsellTip.replace("Dreamy Tip: ", "")}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {cartItems.length === 0 ? (
                     <div style={styles.empty}>
                         <p>Your bowl is empty 🥣</p>
@@ -582,14 +666,34 @@ const CartModal = () => {
                     cartItems.map(item => (
                         <div key={item.cartId} style={styles.itemRow}>
                             <div style={styles.itemInfo}>
-                                <div style={styles.itemName}>{item.name}</div>
-                                <div style={styles.itemPrice}>₹{item.price}</div>
+                                <div style={styles.itemName}>
+                                    {item.name}
+                                    {item.quantity > 1 && <span style={styles.qtyBadge}>x{item.quantity}</span>}
+                                </div>
+                                <div style={styles.itemPrice}>₹{item.price * (item.quantity || 1)}</div>
                                 {item.type === 'CUSTOM' && (
                                     <div style={styles.itemMeta}>
                                         {item.details.base.name} + {item.details.sauce.name}
                                     </div>
                                 )}
                             </div>
+
+                            <div style={styles.qtyControls}>
+                                <button
+                                    onClick={() => updateQuantity(item.cartId, -1)}
+                                    style={styles.qtyBtn}
+                                >
+                                    -
+                                </button>
+                                <span style={styles.qtyVal}>{item.quantity || 1}</span>
+                                <button
+                                    onClick={() => updateQuantity(item.cartId, 1)}
+                                    style={styles.qtyBtn}
+                                >
+                                    +
+                                </button>
+                            </div>
+
                             <button onClick={() => removeFromCart(item.cartId)} style={styles.removeBtn}>
                                 <Trash2 size={16} />
                             </button>
@@ -599,10 +703,70 @@ const CartModal = () => {
             </div>
             {cartItems.length > 0 && (
                 <div style={styles.footer}>
+                    {/* Combo Hint */}
+                    {comboHint && comboHint.message && (
+                        <div style={{
+                            ...styles.comboHint,
+                            background: comboHint.qualified ? '#d1fae5' : '#fef3c7',
+                            color: comboHint.qualified ? '#065f46' : '#92400e',
+                            marginBottom: '1rem'
+                        }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                                {comboHint.message}
+                            </div>
+                            {comboHint.hint && (
+                                <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>
+                                    {comboHint.hint}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div style={styles.totalRow}>
-                        <span>Total</span>
+                        <span>Subtotal</span>
                         <span style={styles.totalVal}>₹{cartTotal}</span>
                     </div>
+
+                    {/* Combo Discount Display */}
+                    {comboDiscount && comboDiscount.applicable && (
+                        <>
+                            <div style={{
+                                ...styles.totalRow,
+                                color: '#10b981',
+                                fontWeight: '600',
+                                marginTop: '0.5rem'
+                            }}>
+                                <span>🎉 {comboDiscount.comboName}</span>
+                                <span>-₹{comboDiscount.savings}</span>
+                            </div>
+                            <div style={{
+                                ...styles.totalRow,
+                                fontSize: '1.2rem',
+                                fontWeight: '700',
+                                marginTop: '0.5rem',
+                                paddingTop: '0.5rem',
+                                borderTop: '2px solid #e5e7eb'
+                            }}>
+                                <span>Total</span>
+                                <span style={{ color: '#667eea' }}>₹{comboDiscount.discountedTotal}</span>
+                            </div>
+                        </>
+                    )}
+
+                    {!comboDiscount?.applicable && (
+                        <div style={{
+                            ...styles.totalRow,
+                            fontSize: '1.2rem',
+                            fontWeight: '700',
+                            marginTop: '0.5rem',
+                            paddingTop: '0.5rem',
+                            borderTop: '2px solid #e5e7eb'
+                        }}>
+                            <span>Total</span>
+                            <span style={styles.totalVal}>₹{cartTotal}</span>
+                        </div>
+                    )}
+
                     <button style={styles.checkoutBtn} onClick={() => setStep('CUSTOMER_INFO')}>
                         Proceed to Checkout <ArrowRight size={18} />
                     </button>
@@ -652,8 +816,8 @@ const CartModal = () => {
         <div style={styles.body}>
             <div style={styles.bill}>
                 <div style={styles.billHeader}>
-                    <img src={logo} alt="Happy Scoops" style={{ width: '100px', height: 'auto', marginBottom: '0.5rem', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-                    <h4 style={{ margin: '0.5rem 0' }}>Happy Scoops Bowl 🍨</h4>
+                    <img src={logo} alt="The Dreamy Bowl" style={{ width: '100px', height: 'auto', marginBottom: '0.5rem', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+                    <h4 style={{ margin: '0.5rem 0' }}>The Dreamy Bowl 🍨</h4>
                     <p>Hinjawadi, Pune</p>
                     <p style={{ fontSize: '0.8rem' }}>GSTIN: 27ABCDE1234F1Z5</p>
                 </div>
@@ -715,7 +879,7 @@ const CartModal = () => {
 
                 <div style={{ textAlign: 'center', marginTop: '1.5rem', fontStyle: 'italic', color: '#555' }}>
                     <p>"Life is short, make it sweet!" 🍬</p>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Thank you for visiting Happy Scoops!</p>
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Thank you for visiting The Dreamy Bowl!</p>
                 </div>
             </div>
             <button id="downloadBtn" style={styles.downloadBtn} onClick={handleDownloadReceipt}>
@@ -726,22 +890,32 @@ const CartModal = () => {
     );
 
     return (
-        <div style={styles.overlay}>
-            <div style={styles.modal}>
-                <div style={styles.header}>
-                    <h3>{step === 'CART' ? 'Your Cart 🛒' :
-                        step === 'PAYMENT' ? 'Payment 💸' : 'Receipt 🧾'}</h3>
-                    {step !== 'SUCCESS' && (
-                        <button onClick={handleClose}><X size={24} /></button>
-                    )}
-                </div>
+        <>
+            <div style={styles.overlay}>
+                <div style={styles.modal}>
+                    <div style={styles.header}>
+                        <h3>{step === 'CART' ? 'Your Cart 🛒' :
+                            step === 'PAYMENT' ? 'Payment 💸' : 'Receipt 🧾'}</h3>
+                        {step !== 'SUCCESS' && (
+                            <button onClick={handleClose}><X size={24} /></button>
+                        )}
+                    </div>
 
-                {step === 'CART' && renderCartList()}
-                {step === 'CUSTOMER_INFO' && renderCustomerInfo()}
-                {step === 'PAYMENT' && renderPayment()}
-                {step === 'SUCCESS' && renderSuccess()}
+                    {step === 'CART' && renderCartList()}
+                    {step === 'CUSTOMER_INFO' && renderCustomerInfo()}
+                    {step === 'PAYMENT' && renderPayment()}
+                    {step === 'SUCCESS' && renderSuccess()}
+                </div>
             </div>
-        </div>
+
+            {/* Upsell Modal */}
+            <UpsellModal
+                isOpen={showUpsellModal}
+                onClose={() => setShowUpsellModal(false)}
+                onAddUpsell={handleAddUpsell}
+                onSkip={handleSkipUpsell}
+            />
+        </>
     );
 };
 
@@ -758,7 +932,7 @@ const styles = {
         alignItems: 'flex-end' // Bottom sheet style
     },
     modal: {
-        background: 'var(--light)',
+        background: 'var(--bg-light)',
         width: '100%',
         maxHeight: '90vh',
         borderTopLeftRadius: '24px',
@@ -814,26 +988,37 @@ const styles = {
         fontWeight: 700
     },
     itemMeta: { // details
-        fontSize: '0.75rem',
-        color: '#888'
+        fontSize: '0.85rem',
+        color: 'var(--text-body)',
+        marginTop: '0.25rem',
+        lineHeight: '1.4'
     },
     removeBtn: {
-        color: 'var(--danger)',
-        padding: '0.5rem'
+        color: '#FF6B6B',
+        padding: '0.5rem',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'transform 0.2s',
+        background: 'transparent',
+        border: 'none'
     },
     totalRow: {
         display: 'flex',
         justifyContent: 'space-between',
         marginBottom: '1rem',
         fontSize: '1.1rem',
-        fontWeight: 600
+        fontWeight: 600,
+        color: 'var(--text-dark)'
     },
     totalVal: {
-        color: 'var(--primary)',
-        fontSize: '1.5rem'
+        color: 'var(--primary-dark)',
+        fontSize: '1.5rem',
+        fontWeight: '700'
     },
     checkoutBtn: {
-        background: 'var(--dark)',
+        background: 'linear-gradient(135deg, #8ED1B8 0%, #6BB89F 100%)',
         color: 'white',
         width: '100%',
         padding: '1rem',
@@ -842,19 +1027,26 @@ const styles = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: '0.5rem'
+        gap: '0.5rem',
+        fontWeight: 700,
+        boxShadow: '0 4px 12px rgba(142, 209, 184, 0.4)',
+        cursor: 'pointer',
+        border: 'none',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
     },
     // Payment Styles
     qrContainer: {
         textAlign: 'center',
         padding: '1rem',
         background: 'white',
-        borderRadius: '16px'
+        borderRadius: '16px',
+        border: '1px solid var(--border-light)'
     },
     qrPlaceholder: {
         width: '200px',
         height: '200px',
-        background: '#eee',
+        background: 'var(--bg-light)',
         margin: '0 auto',
         display: 'flex',
         alignItems: 'center',
@@ -870,19 +1062,42 @@ const styles = {
         borderRadius: '12px',
         fontSize: '1.1rem',
         fontWeight: 700,
-        margin: '1rem 0'
+        margin: '1rem 0',
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(72, 187, 120, 0.3)'
     },
     disabledBtn: {
-        background: '#ccc',
+        background: 'var(--text-light)',
         color: 'white',
         width: '100%',
         padding: '1rem',
         borderRadius: '12px',
-        margin: '1rem 0'
+        margin: '1rem 0',
+        border: 'none',
+        cursor: 'not-allowed'
+    },
+    inputGroup: {
+        marginBottom: '1rem'
+    },
+    sectionTitle: { // CUSTOMER_INFO title
+        fontSize: '1.25rem',
+        fontWeight: 700,
+        marginBottom: '1.5rem',
+        textAlign: 'center',
+        color: 'var(--text-dark)'
+    },
+    successTitle: {
+        fontSize: '1.5rem',
+        fontWeight: 700,
+        color: 'var(--success)',
+        textAlign: 'center',
+        marginBottom: '1rem'
     },
     hint: {
-        color: '#666',
-        fontSize: '0.9rem'
+        color: 'var(--text-muted)',
+        fontSize: '0.8rem',
+        marginTop: '0.25rem'
     },
     linkBtn: {
         color: 'var(--dark)',
@@ -903,12 +1118,12 @@ const styles = {
         marginBottom: '1rem'
     },
     dashed: {
-        borderTop: '1px dashed #ccc',
+        borderTop: '1px dashed var(--border)',
         margin: '10px 0',
         borderBottom: 'none'
     },
     solid: {
-        borderTop: '1px solid #000',
+        borderTop: '1px solid var(--text-dark)',
         margin: '10px 0',
         borderBottom: 'none'
     },
@@ -916,10 +1131,11 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         fontSize: '0.9rem',
-        marginBottom: '4px'
+        marginBottom: '4px',
+        color: 'var(--text-body)'
     },
     tokenBox: {
-        border: '2px solid #000',
+        border: '2px solid var(--text-dark)',
         padding: '10px',
         textAlign: 'center',
         margin: '15px 0',
@@ -927,7 +1143,8 @@ const styles = {
     },
     tokenNum: {
         fontSize: '2rem',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        color: 'var(--text-dark)'
     },
     billItems: {
         margin: '10px 0'
@@ -936,25 +1153,30 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         fontSize: '0.9rem',
-        marginBottom: '4px'
+        marginBottom: '4px',
+        color: 'var(--text-body)'
     },
     billTotal: {
         display: 'flex',
         justifyContent: 'space-between',
         fontWeight: 'bold',
-        fontSize: '1.1rem'
+        fontSize: '1.1rem',
+        color: 'var(--text-dark)'
     },
     closeMainBtn: {
-        background: 'var(--primary)',
+        background: 'linear-gradient(135deg, #8ED1B8 0%, #6BB89F 100%)',
         color: 'white',
         width: '100%',
         padding: '1rem',
         borderRadius: '99px',
         marginTop: '1.5rem',
-        fontWeight: 600
+        fontWeight: 700,
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(142, 209, 184, 0.4)'
     },
     downloadBtn: {
-        background: '#4CAF50',
+        background: 'var(--success)',
         color: 'white',
         width: '100%',
         padding: '1rem',
@@ -967,31 +1189,77 @@ const styles = {
         gap: '0.5rem',
         cursor: 'pointer',
         border: 'none',
-        fontSize: '1rem'
+        fontSize: '1rem',
+        boxShadow: '0 4px 12px rgba(72, 187, 120, 0.3)'
+    },
+    qtyBadge: {
+        fontSize: '0.75rem',
+        background: '#e2e8f0',
+        padding: '2px 6px',
+        borderRadius: '12px',
+        marginLeft: '6px',
+        color: '#475569',
+        fontWeight: '600'
+    },
+    qtyControls: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        margin: '0 1rem',
+        background: '#f1f5f9',
+        borderRadius: '8px',
+        padding: '2px'
+    },
+    qtyBtn: {
+        width: '24px',
+        height: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: 'none',
+        background: 'white',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '1rem',
+        color: '#64748b',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+    },
+    qtyVal: {
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        minWidth: '16px',
+        textAlign: 'center',
+        color: '#1e293b'
     },
     label: {
         display: 'block',
         marginBottom: '0.5rem',
         fontWeight: '600',
-        color: 'var(--dark)'
+        color: 'var(--text-dark)'
     },
     input: {
         width: '100%',
         padding: '1rem',
         borderRadius: '12px',
-        border: '1px solid #ddd',
+        border: '1px solid var(--border)',
         fontSize: '1rem',
         outline: 'none',
-        background: 'var(--light)'
+        background: 'var(--bg-light)',
+        color: 'var(--text-dark)',
+        marginBottom: '1rem'
     },
     lookupBtn: {
         padding: '1rem',
         borderRadius: '12px',
-        border: '1px solid #ddd',
+        border: 'none',
         background: 'var(--primary)',
         color: 'white',
         cursor: 'pointer',
-        fontSize: '1.2rem'
+        fontSize: '1.2rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '50px'
     },
     loyaltyCard: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -999,47 +1267,63 @@ const styles = {
         padding: '1.5rem',
         borderRadius: '16px',
         marginBottom: '1.5rem',
-        boxShadow: '0 8px 16px rgba(102, 126, 234, 0.3)'
+        boxShadow: '0 8px 20px rgba(102, 126, 234, 0.25)'
     },
     loyaltyHeader: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '0.5rem',
+        marginBottom: '1rem',
         fontSize: '1.1rem',
-        fontWeight: '600'
+        fontWeight: '700'
     },
     vipBadge: {
-        background: 'rgba(255, 215, 0, 0.3)',
-        padding: '0.25rem 0.75rem',
-        borderRadius: '12px',
+        background: 'rgba(255, 255, 255, 0.2)',
+        padding: '0.4rem 0.8rem',
+        borderRadius: '20px',
         fontSize: '0.75rem',
         fontWeight: '700',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.25rem',
-        border: '1px solid rgba(255, 215, 0, 0.5)'
+        gap: '0.4rem',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        color: 'white'
     },
     loyaltyPoints: {
-        fontSize: '0.9rem',
-        marginBottom: '0.5rem',
-        opacity: 0.9
+        fontSize: '0.95rem',
+        marginBottom: '1.5rem',
+        opacity: 0.9,
+        fontWeight: '500'
     },
     discountApplied: {
-        background: 'rgba(76, 175, 80, 0.2)',
-        padding: '0.75rem',
-        borderRadius: '8px',
+        background: 'rgba(255, 255, 255, 0.9)',
+        color: 'var(--success)',
+        padding: '0.8rem',
+        borderRadius: '12px',
         marginTop: '1rem',
-        fontWeight: '600',
-        textAlign: 'center'
+        fontWeight: '700',
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
     },
     pointsEarn: {
         marginTop: '1rem',
-        padding: '0.75rem',
-        background: 'rgba(255, 255, 255, 0.2)',
-        borderRadius: '8px',
+        padding: '0.8rem',
+        background: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: '12px',
         fontSize: '0.9rem',
-        textAlign: 'center'
+        textAlign: 'center',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+    },
+    comboHint: {
+        padding: '0.75rem 1rem',
+        borderRadius: '12px',
+        fontSize: '0.85rem',
+        textAlign: 'center',
+        fontWeight: '500'
     }
 };
 

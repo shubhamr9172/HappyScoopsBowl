@@ -19,9 +19,9 @@ const styles = {
     hero: {
         padding: '3rem 1.5rem',
         textAlign: 'center',
-        background: 'linear-gradient(180deg, var(--light) 0%, #FFF0F0 100%)',
-        borderBottomLeftRadius: 'var(--radius-lg)',
-        borderBottomRightRadius: 'var(--radius-lg)',
+        background: 'linear-gradient(180deg, var(--bg-mint) 0%, var(--bg-cream) 100%)',
+        borderBottomLeftRadius: 'var(--radius-xl)',
+        borderBottomRightRadius: 'var(--radius-xl)',
         marginBottom: '2rem'
     },
     content: {
@@ -30,24 +30,28 @@ const styles = {
         alignItems: 'center'
     },
     tag: {
-        background: 'rgba(255, 107, 107, 0.1)',
-        color: 'var(--primary)',
-        padding: '0.25rem 0.75rem',
+        background: 'rgba(142, 209, 184, 0.15)',
+        color: 'var(--primary-dark)',
+        padding: '0.4rem 1rem',
         borderRadius: 'var(--radius-full)',
-        fontSize: '0.875rem',
-        fontWeight: 600,
-        marginBottom: '1rem'
+        fontSize: '0.85rem',
+        fontWeight: 700,
+        marginBottom: '1.25rem',
+        letterSpacing: '0.5px',
+        textTransform: 'uppercase'
     },
     title: {
         fontSize: '2.5rem',
         lineHeight: 1.1,
-        marginBottom: '0.75rem',
-        color: 'var(--dark)'
+        marginBottom: '1rem',
+        color: 'var(--text-dark)',
+        fontWeight: '800'
     },
     subtitle: {
-        color: 'var(--text-gray)',
-        fontSize: '1rem',
-        maxWidth: '280px'
+        color: 'var(--text-body)',
+        fontSize: '1.1rem',
+        maxWidth: '300px',
+        lineHeight: '1.5'
     }
 };
 

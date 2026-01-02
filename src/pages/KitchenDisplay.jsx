@@ -154,11 +154,12 @@ const KitchenDisplay = () => {
 const styles = {
     container: {
         minHeight: '100vh',
-        background: '#1a1a1a',
-        color: 'white',
-        padding: '0.5rem',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        color: '#2c3e50',
+        padding: '1rem',
         maxWidth: '100vw',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        fontFamily: "'Outfit', sans-serif"
     },
     loading: {
         textAlign: 'center',
@@ -170,14 +171,21 @@ const styles = {
         flexDirection: 'column',
         gap: '0.75rem',
         marginBottom: '1rem',
-        padding: '1rem',
-        background: '#2a2a2a',
-        borderRadius: '12px'
+        padding: '1.5rem',
+        background: 'rgba(255,255,255,0.8)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '20px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
     },
     title: {
         margin: 0,
-        fontSize: '1.5rem',
-        textAlign: 'center'
+        fontSize: '2rem',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        fontWeight: '800',
+        letterSpacing: '-1px'
     },
     headerActions: {
         display: 'flex',
@@ -190,9 +198,9 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        padding: '0.6rem 0.9rem',
-        background: '#3a3a3a',
-        color: 'white',
+        padding: '0.6rem 1.2rem',
+        background: 'white',
+        color: '#64748b',
         border: 'none',
         borderRadius: '8px',
         cursor: 'pointer',
@@ -229,25 +237,29 @@ const styles = {
         padding: '0.5rem'
     },
     orderCard: {
-        padding: '1.25rem',
-        borderRadius: '16px',
-        border: '3px solid',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        padding: '1.5rem',
+        borderRadius: '24px',
+        border: 'none',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
         minWidth: 0,
-        maxWidth: '100%'
+        maxWidth: '100%',
+        background: 'rgba(255,255,255,0.95)',
+        transition: 'transform 0.2s ease'
     },
     tokenSection: {
         textAlign: 'center',
         padding: '1rem 0'
     },
     tokenLabel: {
-        fontSize: '0.9rem',
+        fontSize: '0.85rem',
         fontWeight: '600',
-        color: '#666',
-        marginBottom: '0.5rem'
+        color: '#94a3b8',
+        marginBottom: '0.25rem',
+        letterSpacing: '1px',
+        textTransform: 'uppercase'
     },
     tokenNumber: {
         fontSize: 'clamp(3rem, 10vw, 4.5rem)',
@@ -269,8 +281,9 @@ const styles = {
         flexDirection: 'column',
         gap: '0.75rem',
         padding: '1rem',
-        background: 'rgba(255,255,255,0.1)',
-        borderRadius: '8px'
+        background: '#f8fafc',
+        borderRadius: '16px',
+        border: '1px solid #e2e8f0'
     },
     item: {
         display: 'flex',
@@ -284,8 +297,8 @@ const styles = {
     },
     itemName: {
         fontSize: '1.1rem',
-        fontWeight: '600',
-        color: '#333'
+        fontWeight: '700',
+        color: '#1e293b'
     },
     itemDetails: {
         fontSize: '0.85rem',
@@ -298,10 +311,10 @@ const styles = {
     startBtn: {
         width: '100%',
         padding: '1rem',
-        background: '#4CAF50',
+        background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
         color: 'white',
         border: 'none',
-        borderRadius: '12px',
+        borderRadius: '16px',
         fontSize: '1.1rem',
         fontWeight: '700',
         cursor: 'pointer',
@@ -311,10 +324,10 @@ const styles = {
     readyBtn: {
         width: '100%',
         padding: '1rem',
-        background: '#2196F3',
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         color: 'white',
         border: 'none',
-        borderRadius: '12px',
+        borderRadius: '16px',
         fontSize: '1.1rem',
         fontWeight: '700',
         cursor: 'pointer',

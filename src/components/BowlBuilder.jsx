@@ -36,7 +36,13 @@ const BowlBuilder = () => {
 
     return (
         <section style={styles.section} id="builder">
-            <h2 style={styles.heading}>Build Your Own Bowl 🛠️</h2>
+            <div style={styles.headerWrapper}>
+                <h2 style={styles.gradientHeading}>
+                    Build Your Own Bowl
+                </h2>
+                <div style={styles.decorativeLine}></div>
+                <p style={styles.premiumSubtitle}>CRAFT YOUR DREAM DESSERT</p>
+            </div>
 
             <div style={styles.card}>
                 {/* Steps */}
@@ -109,102 +115,148 @@ const styles = {
     section: {
         padding: '0 1rem 2rem 1rem'
     },
+    headerWrapper: {
+        textAlign: 'center',
+        marginBottom: '2.5rem',
+        position: 'relative',
+        marginTop: '1rem'
+    },
+    gradientHeading: {
+        fontSize: '2.5rem',
+        textAlign: 'center',
+        marginBottom: '0.75rem',
+        background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        fontWeight: '800',
+        letterSpacing: '-1px'
+    },
+    decorativeLine: {
+        width: '60px',
+        height: '4px',
+        background: 'linear-gradient(90deg, #FFD166 0%, #FFB84D 100%)',
+        margin: '0 auto 1rem auto',
+        borderRadius: '2px'
+    },
+    premiumSubtitle: {
+        textAlign: 'center',
+        fontSize: '0.8rem',
+        color: '#95a5a6',
+        letterSpacing: '3px',
+        textTransform: 'uppercase',
+        fontWeight: '600'
+    },
     heading: {
         marginBottom: '1rem',
-        fontSize: '1.25rem',
-        color: 'var(--dark)'
+        fontSize: '1.5rem',
+        color: 'var(--text-dark)',
+        fontWeight: '700'
     },
     card: {
         background: 'var(--white)',
-        borderRadius: 'var(--radius-lg)',
+        borderRadius: '20px',
         padding: '1.5rem',
-        boxShadow: 'var(--shadow-md)'
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
     },
     step: {
-        marginBottom: '1.5rem'
+        marginBottom: '2rem'
     },
     stepTitle: {
-        fontSize: '0.9rem',
+        fontSize: '0.85rem',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-        color: 'var(--text-gray)',
-        marginBottom: '0.75rem'
+        letterSpacing: '1px',
+        color: 'var(--text-muted)',
+        marginBottom: '1rem',
+        fontWeight: '700'
     },
     optionsRow: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.5rem'
+        gap: '0.75rem'
     },
     optionsWrap: {
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '0.5rem'
+        gap: '0.75rem'
     },
     option: {
-        padding: '0.75rem',
+        padding: '1rem',
         border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: '12px',
         textAlign: 'left',
         display: 'flex',
         justifyContent: 'space-between',
         transition: 'all 0.2s',
-        fontSize: '0.95rem'
+        fontSize: '1rem',
+        color: 'var(--text-body)',
+        background: 'var(--bg-light)'
     },
     optionActive: {
-        padding: '0.75rem',
+        padding: '1rem',
         border: '1px solid var(--primary)',
-        background: 'rgba(255, 107, 107, 0.05)',
-        borderRadius: 'var(--radius-sm)',
+        background: 'var(--primary-subtle)',
+        borderRadius: '12px',
         textAlign: 'left',
         display: 'flex',
         justifyContent: 'space-between',
-        color: 'var(--primary)',
+        color: 'var(--text-dark)',
         fontWeight: 600,
         boxShadow: '0 0 0 1px var(--primary)'
     },
     priceMeta: {
-        fontSize: '0.8rem',
-        color: 'var(--text-gray)'
+        fontSize: '0.9rem',
+        color: 'var(--text-muted)',
+        fontWeight: '500'
     },
     chip: {
-        padding: '0.5rem 1rem',
+        padding: '0.6rem 1.2rem',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-full)',
-        fontSize: '0.875rem',
+        fontSize: '0.9rem',
         transition: 'all 0.2s',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem'
+        gap: '0.5rem',
+        background: 'var(--white)',
+        color: 'var(--text-body)'
     },
     chipActive: {
-        padding: '0.5rem 1rem',
-        border: '1px solid var(--secondary)',
-        background: 'var(--secondary)',
-        color: 'var(--dark)',
+        padding: '0.6rem 1.2rem',
+        border: '1px solid var(--primary-dark)',
+        background: 'var(--primary)',
+        color: 'white',
         borderRadius: 'var(--radius-full)',
-        fontSize: '0.875rem',
+        fontSize: '0.9rem',
         fontWeight: 600,
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem'
+        gap: '0.5rem',
+        boxShadow: '0 2px 8px rgba(142, 209, 184, 0.4)'
     },
     footer: {
-        marginTop: '1.5rem',
+        marginTop: '2rem',
         paddingTop: '1.5rem',
-        borderTop: '1px solid var(--gray)',
+        borderTop: '1px solid var(--border-light)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
     },
     buildBtn: {
-        background: 'var(--dark)',
-        color: 'var(--white)',
-        padding: '0.75rem 1.5rem',
-        borderRadius: 'var(--radius-full)',
+        background: 'linear-gradient(135deg, #8ED1B8 0%, #6BB89F 100%)',
+        color: 'white',
+        padding: '0.85rem 1.75rem',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        boxShadow: 'var(--shadow-lg)'
+        boxShadow: '0 4px 12px rgba(142, 209, 184, 0.4)',
+        fontWeight: 700,
+        fontSize: '1rem',
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
     }
 };
 

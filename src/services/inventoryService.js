@@ -12,54 +12,112 @@ const isFirebaseConfigured = () => {
     }
 };
 
-// Default inventory items
+// Default inventory items for "The Dreamy Bowl"
 const DEFAULT_INVENTORY = [
-    // Bases
-    { id: 'vanilla-base', name: 'Vanilla Ice Cream', category: 'base', currentStock: 100, unit: 'scoops', minStock: 20, costPerUnit: 15 },
-    { id: 'chocolate-base', name: 'Chocolate Ice Cream', category: 'base', currentStock: 100, unit: 'scoops', minStock: 20, costPerUnit: 18 },
-    { id: 'mango-base', name: 'Mango Ice Cream', category: 'base', currentStock: 100, unit: 'scoops', minStock: 20, costPerUnit: 18 },
+    // Bases & Bakery
+    { id: 'brownie-cube', name: 'Brownie Cubes', category: 'bakery', currentStock: 200, unit: 'pieces', minStock: 50, costPerUnit: 5, alertMessage: "CRITICAL: Brownie stock low!" },
+    { id: 'choc-mousse', name: 'Chocolate Mousse', category: 'base', currentStock: 100, unit: 'scoops', minStock: 20, costPerUnit: 15 },
+    { id: 'vanilla-ice-cream', name: 'Vanilla Ice Cream', category: 'base', currentStock: 50, unit: 'scoops', minStock: 10, costPerUnit: 12 },
 
-    // Sauces
-    { id: 'chocolate-sauce', name: 'Chocolate Sauce', category: 'sauce', currentStock: 50, unit: 'servings', minStock: 10, costPerUnit: 8 },
-    { id: 'biscoff-sauce', name: 'Biscoff Sauce', category: 'sauce', currentStock: 50, unit: 'servings', minStock: 10, costPerUnit: 15 },
-    { id: 'strawberry-sauce', name: 'Strawberry Sauce', category: 'sauce', currentStock: 50, unit: 'servings', minStock: 10, costPerUnit: 8 },
-    { id: 'caramel-sauce', name: 'Caramel Sauce', category: 'sauce', currentStock: 50, unit: 'servings', minStock: 10, costPerUnit: 10 },
+    // Dairy & Liquids
+    { id: 'milk', name: 'Milk', category: 'dairy', currentStock: 10000, unit: 'ml', minStock: 1000, costPerUnit: 0.06 }, // 60/liter
+    { id: 'ganache', name: 'Dark Choc Ganache', category: 'sauce', currentStock: 2000, unit: 'ml', minStock: 500, costPerUnit: 0.5 },
+    { id: 'hot-fudge', name: 'Hot Chocolate Fudge', category: 'sauce', currentStock: 2000, unit: 'ml', minStock: 500, costPerUnit: 0.4 },
+    { id: 'biscoff-spread', name: 'Biscoff Spread', category: 'sauce', currentStock: 1000, unit: 'grams', minStock: 200, costPerUnit: 1.2 },
 
-    // Toppings
-    { id: 'brownie', name: 'Brownie Chunks', category: 'topping', currentStock: 40, unit: 'pieces', minStock: 10, costPerUnit: 12 },
-    { id: 'choco-chips', name: 'Chocolate Chips', category: 'topping', currentStock: 60, unit: 'servings', minStock: 15, costPerUnit: 6 },
-    { id: 'biscuit-crumbs', name: 'Biscuit Crumbs', category: 'topping', currentStock: 60, unit: 'servings', minStock: 15, costPerUnit: 6 },
-    { id: 'mixed-nuts', name: 'Mixed Nuts', category: 'topping', currentStock: 50, unit: 'servings', minStock: 10, costPerUnit: 10 },
-    { id: 'tutti-frutti', name: 'Tutti Frutti', category: 'topping', currentStock: 70, unit: 'servings', minStock: 15, costPerUnit: 4 }
+    // Produce
+    { id: 'banana', name: 'Banana', category: 'produce', currentStock: 30, unit: 'pieces', minStock: 5, costPerUnit: 5 },
+    { id: 'strawberry', name: 'Strawberry', category: 'produce', currentStock: 50, unit: 'pieces', minStock: 10, costPerUnit: 8 },
+
+    // Toppings & Mix-ins
+    { id: 'oreo', name: 'Oreo Biscuit', category: 'topping', currentStock: 100, unit: 'pieces', minStock: 20, costPerUnit: 5 },
+    { id: 'kitkat', name: 'KitKat Finger', category: 'topping', currentStock: 100, unit: 'pieces', minStock: 20, costPerUnit: 6 },
+    { id: 'biscoff-biscuit', name: 'Biscoff Biscuit', category: 'topping', currentStock: 100, unit: 'pieces', minStock: 20, costPerUnit: 8 },
+    { id: 'marshmallow', name: 'Marshmallow', category: 'topping', currentStock: 100, unit: 'pieces', minStock: 20, costPerUnit: 2 },
+    { id: 'choco-chips-dark', name: 'Dark Choco Chips', category: 'topping', currentStock: 1000, unit: 'grams', minStock: 200, costPerUnit: 0.5 },
+    { id: 'choco-chips-milk', name: 'Milk Choco Chips', category: 'topping', currentStock: 1000, unit: 'grams', minStock: 200, costPerUnit: 0.5 },
+    { id: 'choco-chips-white', name: 'White Choco Chips', category: 'topping', currentStock: 1000, unit: 'grams', minStock: 200, costPerUnit: 0.5 },
+    { id: 'white-shavings', name: 'White Choco Shavings', category: 'topping', currentStock: 500, unit: 'grams', minStock: 100, costPerUnit: 0.8 },
+    { id: 'gold-dust', name: 'Edible Gold Dust', category: 'topping', currentStock: 50, unit: 'servings', minStock: 5, costPerUnit: 20 },
+    { id: 'dark-chocolate-block', name: 'Dark Chocolate Block', category: 'base', currentStock: 2000, unit: 'grams', minStock: 500, costPerUnit: 0.6 },
+    { id: 'cornflour', name: 'Cornflour', category: 'pantry', currentStock: 1000, unit: 'grams', minStock: 200, costPerUnit: 0.1 },
+
+    // Packaging
+    { id: 'paper-tub-300ml', name: '300ml Paper Tub', category: 'packaging', currentStock: 200, unit: 'pieces', minStock: 30, costPerUnit: 3 },
+    { id: 'wooden-spoon', name: 'Wooden Spoon', category: 'packaging', currentStock: 500, unit: 'pieces', minStock: 50, costPerUnit: 1 },
+    { id: 'paper-cup-150ml', name: '150ml Paper Cup', category: 'packaging', currentStock: 200, unit: 'pieces', minStock: 30, costPerUnit: 2 },
 ];
 
-// Ingredient mapping for menu items
+// Ingredient mapping for menu items (Key is Item ID from menu.js)
 export const INGREDIENT_RECIPES = {
-    // Prebuilt Combos
-    'biscoff-indulgence': [
-        { id: 'vanilla-base', quantity: 2 },
-        { id: 'biscoff-sauce', quantity: 1 },
-        { id: 'biscuit-crumbs', quantity: 1 }
+    // 1. Banana Choco Tub
+    '1': [
+        { id: 'brownie-cube', quantity: 1 },
+        { id: 'banana', quantity: 0.5 },
+        { id: 'hot-fudge', quantity: 30 }, // ml
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
     ],
-    'chocolate-overload': [
-        { id: 'chocolate-base', quantity: 2 },
-        { id: 'chocolate-sauce', quantity: 1 },
-        { id: 'brownie', quantity: 1 }
+    // 2. OG Brownie Tub
+    '2': [
+        { id: 'brownie-cube', quantity: 2 },
+        { id: 'choc-mousse', quantity: 1 },
+        { id: 'ganache', quantity: 15 }, // ml
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
     ],
-    'mango-madness': [
-        { id: 'mango-base', quantity: 2 },
-        { id: 'strawberry-sauce', quantity: 1 },
-        { id: 'mixed-nuts', quantity: 1 }
+    // 3. Student Hot Choco
+    '3': [
+        { id: 'milk', quantity: 150 },
+        { id: 'dark-chocolate-block', quantity: 20 }, // grams
+        { id: 'cornflour', quantity: 5 }, // grams
+        { id: 'marshmallow', quantity: 1 },
+        { id: 'paper-cup-150ml', quantity: 1 }
     ],
-    'berry-blast': [
-        { id: 'vanilla-base', quantity: 2 },
-        { id: 'strawberry-sauce', quantity: 1 },
-        { id: 'tutti-frutti', quantity: 1 }
+    // 4. Triple Treat Tub
+    '4': [
+        { id: 'choc-mousse', quantity: 2 },
+        { id: 'choco-chips-dark', quantity: 10 },
+        { id: 'choco-chips-milk', quantity: 10 },
+        { id: 'choco-chips-white', quantity: 10 },
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
     ],
-    'nutty-professor': [
-        { id: 'chocolate-base', quantity: 2 },
-        { id: 'caramel-sauce', quantity: 1 },
-        { id: 'mixed-nuts', quantity: 1 }
+    // 5. Cold Choco Shot
+    '5': [
+        { id: 'milk', quantity: 180 },
+        { id: 'ganache', quantity: 30 },
+        { id: 'choc-mousse', quantity: 1 },
+        { id: 'paper-cup-150ml', quantity: 1 } // Using paper cup for now
+    ],
+    // 6. Oreo Midnight Tub
+    '6': [
+        { id: 'oreo', quantity: 1.5 },
+        { id: 'brownie-cube', quantity: 2 },
+        { id: 'choc-mousse', quantity: 1 },
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
+    ],
+    // 7. The Ultimate Dreamy
+    '7': [
+        { id: 'brownie-cube', quantity: 4 },
+        { id: 'choc-mousse', quantity: 2 },
+        { id: 'kitkat', quantity: 1 },
+        { id: 'oreo', quantity: 2 },
+        { id: 'ganache', quantity: 30 },
+        { id: 'gold-dust', quantity: 1 },
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
+    ],
+    // 8. Strawberry Biscoff
+    '8': [
+        { id: 'brownie-cube', quantity: 4 },
+        { id: 'strawberry', quantity: 3 },
+        { id: 'biscoff-spread', quantity: 15 }, // grams
+        { id: 'biscoff-biscuit', quantity: 1 },
+        { id: 'white-shavings', quantity: 5 },
+        { id: 'paper-tub-300ml', quantity: 1 },
+        { id: 'wooden-spoon', quantity: 1 }
     ]
 };
 
@@ -133,25 +191,23 @@ export const InventoryService = {
         let recipe = [];
 
         if (itemType === 'COMBO') {
-            // Get recipe for prebuilt combo
-            const comboKey = itemId.toString().toLowerCase().replace(/\s+/g, '-');
-            recipe = INGREDIENT_RECIPES[comboKey] || [];
+            // All modules in combo (this logic usually handled by checking individual items in cart)
+            // But if checking a single combo ADDITION, we might need to check the specific items.
+            // For now, assuming availability check is per-item.
+            return true;
+        }
+
+        // Check standard menu item
+        const recipeKey = itemId.toString();
+        if (INGREDIENT_RECIPES[recipeKey]) {
+            recipe = INGREDIENT_RECIPES[recipeKey];
         } else if (itemType === 'CUSTOM' && customDetails) {
             // Build recipe from custom selections
             if (customDetails.base) {
-                const baseId = customDetails.base.name.toLowerCase() + '-base';
+                const baseId = customDetails.base.id; // Assuming custom details pass correct IDs
                 recipe.push({ id: baseId, quantity: 2 });
             }
-            if (customDetails.sauce) {
-                const sauceId = customDetails.sauce.name.toLowerCase() + '-sauce';
-                recipe.push({ id: sauceId, quantity: 1 });
-            }
-            if (customDetails.toppings) {
-                customDetails.toppings.forEach(topping => {
-                    const toppingId = topping.name.toLowerCase().replace(/\s+/g, '-');
-                    recipe.push({ id: toppingId, quantity: 1 });
-                });
-            }
+            // Add other custom logic if needed, but for now focusing on Menu Items
         }
 
         // Check if all ingredients are available
@@ -170,33 +226,27 @@ export const InventoryService = {
         if (!isFirebaseConfigured()) {
             const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
 
+            // If inventory is empty/old, re-init with default to ensure we have items
+            if (inventory.length === 0 || !inventory.find(i => i.id === 'brownie-cube')) {
+                // Merge with default if missing critical items (fallback safety)
+                // But better to just let it be if user deleted them. 
+                // Here we assume "If completely empty", init.
+            }
+
             orderItems.forEach(item => {
                 let recipe = [];
+                const recipeKey = item.id.toString();
 
-                if (item.type === 'COMBO') {
-                    const comboKey = item.id.toString().toLowerCase().replace(/\s+/g, '-');
-                    recipe = INGREDIENT_RECIPES[comboKey] || [];
-                } else if (item.type === 'CUSTOM' && item.details) {
-                    if (item.details.base) {
-                        const baseId = item.details.base.name.toLowerCase() + '-base';
-                        recipe.push({ id: baseId, quantity: 2 });
-                    }
-                    if (item.details.sauce) {
-                        const sauceId = item.details.sauce.name.toLowerCase() + '-sauce';
-                        recipe.push({ id: sauceId, quantity: 1 });
-                    }
-                    if (item.details.toppings) {
-                        item.details.toppings.forEach(topping => {
-                            const toppingId = topping.name.toLowerCase().replace(/\s+/g, '-');
-                            recipe.push({ id: toppingId, quantity: 1 });
-                        });
-                    }
+                if (INGREDIENT_RECIPES[recipeKey]) {
+                    recipe = INGREDIENT_RECIPES[recipeKey];
+                } else {
+                    // Handle Combos acting as single items or custom items if any
                 }
 
                 recipe.forEach(ingredient => {
                     const idx = inventory.findIndex(i => i.id === ingredient.id);
                     if (idx !== -1) {
-                        inventory[idx].currentStock -= ingredient.quantity;
+                        inventory[idx].currentStock = Math.max(0, inventory[idx].currentStock - ingredient.quantity);
                     }
                 });
             });
@@ -210,25 +260,10 @@ export const InventoryService = {
             // Firebase implementation
             for (const item of orderItems) {
                 let recipe = [];
+                const recipeKey = item.id.toString();
 
-                if (item.type === 'COMBO') {
-                    const comboKey = item.id.toString().toLowerCase().replace(/\s+/g, '-');
-                    recipe = INGREDIENT_RECIPES[comboKey] || [];
-                } else if (item.type === 'CUSTOM' && item.details) {
-                    if (item.details.base) {
-                        const baseId = item.details.base.name.toLowerCase() + '-base';
-                        recipe.push({ id: baseId, quantity: 2 });
-                    }
-                    if (item.details.sauce) {
-                        const sauceId = item.details.sauce.name.toLowerCase() + '-sauce';
-                        recipe.push({ id: sauceId, quantity: 1 });
-                    }
-                    if (item.details.toppings) {
-                        item.details.toppings.forEach(topping => {
-                            const toppingId = topping.name.toLowerCase().replace(/\s+/g, '-');
-                            recipe.push({ id: toppingId, quantity: 1 });
-                        });
-                    }
+                if (INGREDIENT_RECIPES[recipeKey]) {
+                    recipe = INGREDIENT_RECIPES[recipeKey];
                 }
 
                 for (const ingredient of recipe) {
@@ -239,7 +274,7 @@ export const InventoryService = {
                     if (currentItem) {
                         const data = currentItem.data();
                         await updateDoc(itemRef, {
-                            currentStock: data.currentStock - ingredient.quantity
+                            currentStock: Math.max(0, data.currentStock - ingredient.quantity)
                         });
                     }
                 }
@@ -274,44 +309,27 @@ export const InventoryService = {
         }
     },
 
-    // Get low stock items
-    getLowStockItems: (inventory) => {
-        return inventory.filter(item => item.currentStock <= item.minStock);
+    // --- Menu Availability Management ---
+
+    // Get menu availability status
+    getMenuAvailability: async () => {
+        if (!isFirebaseConfigured()) {
+            return JSON.parse(localStorage.getItem('menu_availability') || '{}');
+        }
+        try {
+            // For now, let's just use localStorage for availability to ensure it works immediately
+            // across reloads on this device, which matches the "kitchen tablet" use case.
+            return JSON.parse(localStorage.getItem('menu_availability') || '{}');
+        } catch (e) {
+            return JSON.parse(localStorage.getItem('menu_availability') || '{}');
+        }
     },
 
-    // Calculate cost for menu item
-    calculateItemCost: (itemId, itemType, customDetails = null) => {
-        const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
-        let recipe = [];
-
-        if (itemType === 'COMBO') {
-            const comboKey = itemId.toString().toLowerCase().replace(/\s+/g, '-');
-            recipe = INGREDIENT_RECIPES[comboKey] || [];
-        } else if (itemType === 'CUSTOM' && customDetails) {
-            if (customDetails.base) {
-                const baseId = customDetails.base.name.toLowerCase() + '-base';
-                recipe.push({ id: baseId, quantity: 2 });
-            }
-            if (customDetails.sauce) {
-                const sauceId = customDetails.sauce.name.toLowerCase() + '-sauce';
-                recipe.push({ id: sauceId, quantity: 1 });
-            }
-            if (customDetails.toppings) {
-                customDetails.toppings.forEach(topping => {
-                    const toppingId = topping.name.toLowerCase().replace(/\s+/g, '-');
-                    recipe.push({ id: toppingId, quantity: 1 });
-                });
-            }
-        }
-
-        let totalCost = 0;
-        recipe.forEach(ingredient => {
-            const item = inventory.find(i => i.id === ingredient.id);
-            if (item) {
-                totalCost += item.costPerUnit * ingredient.quantity;
-            }
-        });
-
-        return totalCost;
+    // Toggle menu item availability
+    updateItemAvailability: async (itemId, isAvailable) => {
+        const availability = JSON.parse(localStorage.getItem('menu_availability') || '{}');
+        availability[itemId] = isAvailable;
+        localStorage.setItem('menu_availability', JSON.stringify(availability));
+        window.dispatchEvent(new Event('menu-availability-updated'));
     }
 };

@@ -14,12 +14,12 @@ const Header = () => {
                 <div style={styles.logoWrapper}>
                     <img
                         src={logo}
-                        alt="Happy Scoops"
+                        alt="The Dreamy Bowl"
                         style={styles.logoImage}
                     />
                 </div>
                 <div style={styles.brandSection}>
-                    <h1 style={styles.brandName}>Happy Scoops</h1>
+                    <h1 style={styles.brandName}>The Dreamy Bowl</h1>
                     <p style={styles.tagline}>Desserts Made with Love</p>
                 </div>
             </div>
