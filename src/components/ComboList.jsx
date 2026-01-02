@@ -295,6 +295,7 @@ const ComboList = ({ activeTab, setActiveTab }) => {
 
                                     <div style={styles.menuContent}>
                                         <h3 style={styles.menuTitle}>{combo.name}</h3>
+                                        <p style={styles.description}>{combo.description}</p>
 
                                         {availabilityMsg && (
                                             <div style={{
@@ -688,7 +689,7 @@ const styles = {
     menuImageContainer: {
         position: 'relative',
         width: '100%',
-        paddingTop: '100%',
+        paddingTop: '75%', // 4:3 Aspect Ratio (More landscape friendly)
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)'
     },
@@ -698,9 +699,9 @@ const styles = {
         left: 0,
         width: '100%',
         height: '100%',
-        objectFit: 'contain',
+        objectFit: 'cover', // Fill the container
         transition: 'transform 0.5s ease',
-        padding: '10px'
+        // padding: '10px' // Removed padding to fill space
     },
     menuContent: {
         padding: '1.5rem'

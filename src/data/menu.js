@@ -4,7 +4,7 @@ export const PREBUILT_COMBOS = [
         name: "Banana Choco Tub",
         price: 40,
         description: "Fresh Robusta bananas with hot chocolate ganache.",
-        image: "https://images.unsplash.com/photo-1599785209796-786432b228bc?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/banana_choco_tub.png",
         tier: 1,
         brownieCost: 2
     },
@@ -13,7 +13,7 @@ export const PREBUILT_COMBOS = [
         name: "OG Brownie Tub",
         price: 49,
         description: "Classic walnut brownie chunks drowning in ganache.",
-        image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/og_brownie_tub.png",
         tier: 1,
         brownieCost: 2
     },
@@ -22,7 +22,7 @@ export const PREBUILT_COMBOS = [
         name: "Student Hot Choco",
         price: 40,
         description: "Rich, warm, and comforting. The perfect study buddy.",
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/student_hot_choco.png",
         tier: 1,
         brownieCost: 0,
         timeRestricted: true,
@@ -33,7 +33,7 @@ export const PREBUILT_COMBOS = [
         name: "Triple Treat Tub",
         price: 50,
         description: "Brownie + Oreo + KitKat in one tub.",
-        image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/triple_treat_tub.png",
         tier: 2,
         brownieCost: 2
     },
@@ -42,7 +42,7 @@ export const PREBUILT_COMBOS = [
         name: "Cold Choco Shot",
         price: 50,
         description: "Chilled chocolate shot for a quick buzz.",
-        image: "https://images.unsplash.com/photo-1577805947697-b984381e958d?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/cold_choco_shot.png",
         tier: 2,
         brownieCost: 0
     },
@@ -51,7 +51,7 @@ export const PREBUILT_COMBOS = [
         name: "Oreo Midnight Tub",
         price: 59,
         description: "Crushed Oreos layered with dark chocolate.",
-        image: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&q=80&w=300",
+        image: "/images/menu/oreo_midnight_tub.png",
         tier: 2,
         brownieCost: 2
     },
@@ -78,9 +78,9 @@ export const PREBUILT_COMBOS = [
 // Tiers: 1 (Economy), 2 (Mid-Tier), 3 (Premium)
 export const PRICING_CONFIG = {
     tiers: {
-        1: { label: 'Economy', color: '#98FF98', min: 40, max: 49 },
-        2: { label: 'Mid-Tier', color: '#FFFF00', min: 50, max: 59 },
-        3: { label: 'Premium', color: '#FF00FF', min: 129, max: 149 }
+        1: { label: 'Economy', color: '#10B981', min: 40, max: 49 }, // Emerald Green
+        2: { label: 'Mid-Tier', color: '#F59E0B', min: 50, max: 59 }, // Amber
+        3: { label: 'Premium', color: '#8B5CF6', min: 129, max: 149 } // Violet
     },
     // Global deducted items per order
     packaging: {

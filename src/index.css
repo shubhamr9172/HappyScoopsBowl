@@ -1,46 +1,53 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
 
 :root {
-  /* Visual DNA - Midnight & Neon */
-  --bg-dark: #000000;
-  /* Midnight Black */
-  --bg-card: #111111;
-  /* Slightly lighter for cards */
-  --primary: #FFFF00;
-  /* Neon Yellow / Logo Glow */
-  --primary-dim: #D4D400;
-  /* Dimmer yellow for hover */
-  --secondary: #98FF98;
-  /* Mint Green / Cart */
-  --primary: #667eea;
-  --secondary: #764ba2;
-  --accent: #ffd700;
+  /* Visual DNA - Light & Clean */
+  --bg-light: #f8f9fa;
+  /* Light Gray Background */
   --bg-dark: #f7fafc;
-  /* Reverted to light background */
+  /* Main App Background */
   --bg-card: #ffffff;
+  /* Card Background */
+
+  --primary: #667eea;
+  /* Primary Purple/Blue */
+  --secondary: #764ba2;
+  /* Secondary Purple */
+  --accent: #ffd700;
+  /* Gold Accent */
+
   --text-main: #2d3748;
   --text-muted: #718096;
   --text-dark: #1a202c;
   --white: #ffffff;
 
   /* Functional */
-  --success: #98FF98;
-  --danger: #FF4444;
-  --warning: #FFFF00;
+  --success: #10B981;
+  /* Emerald Green */
+  --danger: #EF4444;
+  /* Red */
+  --warning: #F59E0B;
+  /* Amber */
 
   /* UI Elements */
-  --border: #333333;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-full: 9999px;
 
   /* Effects */
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-neon: 0 0 0 transparent;
-  /* Removed neon shadow */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-main: 'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
