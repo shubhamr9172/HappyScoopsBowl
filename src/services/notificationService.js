@@ -5,6 +5,7 @@ const NOTIFICATION_SOUND = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10
 
 export const NotificationService = {
     lastOrderCount: 0,
+    lastLowStockCount: 0,
     isMuted: false,
     hasPermission: false,
 
@@ -120,6 +121,44 @@ export const NotificationService = {
         }
 
         NotificationService.lastOrderCount = currentCount;
+    },
+
+    // Check for low stock items and notify
+    checkLowStock: (inventory) => {
+        if (!Array.isArray(inventory)) return;
+
+        // Filter low stock items (duplicating simple logic to avoid circular dependency)
+        const lowStockItems = inventory.filter(item => item.currentStock <= (item.minStock || 0));
+        const currentCount = lowStockItems.length;
+
+        // If low stock count increased, notify
+        if (currentCount > NotificationService.lastLowStockCount && currentCount > 0) {
+            NotificationService.playSound();
+            NotificationService.flashScreen();
+            NotificationService.showLowStockNotification(lowStockItems);
+        }
+
+        NotificationService.lastLowStockCount = currentCount;
+    },
+
+    // Show browser notification for low stock
+    showLowStockNotification: (items) => {
+        if (!NotificationService.hasPermission) return;
+
+        try {
+            const itemCount = items.length;
+            const title = `⚠️ Low Stock Alert: ${itemCount} Item${itemCount > 1 ? 's' : ''}`;
+            const body = items.map(i => `${i.name} (${i.currentStock})`).join(', ');
+
+            const notification = new Notification(title, {
+                body: body,
+                icon: '/logos/logo_3d_glossy.png',
+                tag: 'low-stock',
+                requireInteraction: true
+            });
+        } catch (error) {
+            console.log('Browser notification error:', error);
+        }
     },
 
     // Get order age in minutes

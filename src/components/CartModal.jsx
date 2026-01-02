@@ -8,7 +8,11 @@ import { calculateComboDiscount, checkComboQualification, getUpsellSuggestions, 
 import UpsellModal from './UpsellModal';
 import upiQr from '../assets/upi_qr.png';
 import logo from '../assets/logo.png';
-import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
+
+// ... (existing imports, but remove html2pdf if unused or keep it)
+
+// ...
 
 // This is a complex component handling Cart View, Checkout, Payment Simulation, and Bill Receipt.
 // For the sake of modularity, usually we split, but for this "Cart Modal" flow it's cohesive.
@@ -133,9 +137,11 @@ const CartModal = () => {
     };
 
     // Download Receipt
+    // Download Receipt
     const handleDownloadReceipt = async () => {
-        const originalText = document.getElementById('downloadBtn').innerText;
-        document.getElementById('downloadBtn').innerText = 'Preparing...';
+        const btn = document.getElementById('downloadBtn');
+        const originalText = btn ? btn.innerText : 'Download Receipt';
+        if (btn) btn.innerText = 'Preparing...';
 
         try {
             let logoSrc = logo;
@@ -154,7 +160,7 @@ const CartModal = () => {
             }
 
             // Generate with whatever logo source we have
-            generateReceipt(logoSrc);
+            await generateReceipt(logoSrc);
         } catch (e) {
             console.error("Download failed:", e);
             alert("Could not download receipt. Please try again.");
@@ -166,328 +172,130 @@ const CartModal = () => {
     };
 
     const generateReceipt = async (logoSrc) => {
-        const receiptHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - ${lastOrder?.orderId}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-            max-width: 420px; 
-            margin: 0 auto; 
-            padding: 30px 20px; 
-            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-            color: #1f2937;
-        }
-        .receipt-container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
-        }
-        .logo-section { 
-            text-align: center; 
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-        .logo-section img { 
-            width: 120px; 
-            height: auto; 
-            display: block; 
-            margin: 0 auto 15px; 
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .brand-name {
-            font-size: 24px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-        .business-info { 
-            color: #6b7280; 
-            font-size: 13px; 
-            line-height: 1.6;
-        }
-        .order-info {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-        .info-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin: 10px 0;
-            font-size: 14px;
-        }
-        .info-label { color: #6b7280; font-weight: 500; }
-        .info-value { color: #1f2937; font-weight: 600; }
-        .token-section { 
-            text-align: center; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 25px; 
-            margin: 25px 0; 
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-        }
-        .token-label { 
-            font-size: 11px; 
-            color: rgba(255,255,255,0.9); 
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-        .token-num { 
-            font-size: 56px; 
-            font-weight: 800; 
-            color: white;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .divider { 
-            border: none; 
-            border-top: 2px dashed #e5e7eb; 
-            margin: 20px 0; 
-        }
-        .solid-divider { 
-            border: none; 
-            border-top: 2px solid #667eea; 
-            margin: 20px 0; 
-        }
-        .items-section {
-            margin: 25px 0;
-        }
-        .section-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #667eea;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        .item-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin: 12px 0;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .item-row:last-child { border-bottom: none; }
-        .item-name { 
-            color: #1f2937; 
-            font-weight: 500;
-            font-size: 15px;
-        }
-        .item-price { 
-            color: #667eea; 
-            font-weight: 600;
-            font-size: 15px;
-        }
-        .totals-section {
-            background: #f9fafb;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-        .total-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin: 10px 0;
-            font-size: 14px;
-        }
-        .grand-total { 
-            font-weight: 700; 
-            font-size: 20px;
-            color: #667eea;
-            padding-top: 15px;
-            margin-top: 15px;
-            border-top: 2px solid #e5e7eb;
-        }
-        .loyalty-section { 
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white; 
-            padding: 18px; 
-            border-radius: 12px; 
-            margin: 20px 0;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-        .loyalty-title {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .loyalty-details {
-            font-size: 12px;
-            opacity: 0.95;
-        }
-        .footer { 
-            text-align: center; 
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed #e5e7eb;
-        }
-        .tagline {
-            font-style: italic; 
-            color: #667eea;
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .thank-you {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        .visit-again {
-            color: #9ca3af;
-            font-size: 12px;
-        }
-        @media print {
-            body { background: white; padding: 0; }
-            .receipt-container { box-shadow: none; }
-        }
-    </style>
-</head>
-<body>
-    <div class="receipt-container">
-        <div class="logo-section">
-            <img src="${logoSrc}" alt="The Dreamy Bowl Logo" />
-            <div class="brand-name">The Dreamy Bowl</div>
-            <div class="business-info">
-                Hinjawadi, Pune<br>
-                GSTIN: 27ABCDE1234F1Z5<br>
-                ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-            </div>
-        </div>
-        
-        <div class="order-info">
-            <div class="info-row">
-                <span class="info-label">Order ID</span>
-                <span class="info-value">${lastOrder?.orderId}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Customer</span>
-                <span class="info-value">${lastOrder?.customerName}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Phone</span>
-                <span class="info-value">${lastOrder?.customerPhone}</span>
-            </div>
-        </div>
-        
-        <div class="token-section">
-            <div class="token-label">Token Number</div>
-            <div class="token-num">${lastOrder?.token}</div>
-        </div>
-        
-        <hr class="divider">
-        
-        <div class="items-section">
-            <div class="section-title">Order Items</div>
-             ${lastOrder?.items?.map(item => `
-                 <div class="item-row">
-                     <span class="item-name">${item.name} <small style="color:#666">x${item.quantity || 1}</small></span>
-                     <span class="item-price">₹${item.price * (item.quantity || 1)}</span>
-                 </div>
-             `).join('')}
-        </div>
-        
-        <hr class="solid-divider">
-        
-        <div class="totals-section">
-            <div class="total-row">
-                <span>Sub Total</span>
-                <span>₹${lastOrder?.subTotal}</span>
-            </div>
-            <div class="total-row">
-                <span>GST (5%)</span>
-                <span>₹${lastOrder?.gst}</span>
-            </div>
-            ${discount > 0 ? `
-            <div class="total-row" style="color: #10b981;">
-                <span>Loyalty Discount</span>
-                <span>-₹${discount}</span>
-            </div>
-            ` : ''}
-            
-            <div class="total-row grand-total">
-                <span>GRAND TOTAL</span>
-                <span>₹${lastOrder?.totalAmount}</span>
-            </div>
-        </div>
-        
-        ${earnedPointsData?.pointsEarned > 0 ? `
-        <div class="loyalty-section">
-            <div class="loyalty-title">
-                <span>💎</span>
-                <span>Loyalty Rewards</span>
-            </div>
-            <div class="loyalty-details">
-                Points Earned: +${earnedPointsData?.pointsEarned}<br>
-                ${earnedPointsData?.bonusPoints > 0 ? `(Includes ${earnedPointsData?.bonusPoints} bonus)<br>` : ''}
-                Total Points: ${(customer?.points || 0) + (earnedPointsData?.pointsEarned || 0)}
-            </div>
-        </div>
-        ` : ''}
-        
-        <div class="footer">
-            <div class="tagline">"Life is short, make it sweet!" 🍨</div>
-            <div class="thank-you">Thank you for visiting The Dreamy Bowl!</div>
-            <div class="visit-again">Please visit again!</div>
-        </div>
-    </div>
-</body>
-</html>
-`;
-        // Create a temporary div to hold the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = receiptHTML;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        document.body.appendChild(tempDiv);
-
-        // Configure PDF options
-        const opt = {
-            margin: 10,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
-        };
-
         try {
-            // Generate PDF blob instead of directly saving
-            const pdfBlob = await html2pdf()
-                .set(opt)
-                .from(tempDiv.querySelector('.receipt-container'))
-                .outputPdf('blob');
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a5'
+            });
 
-            // Create download link with proper filename
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Receipt-${lastOrder?.orderId || 'order'}-${new Date().getTime()}.pdf`;
-            document.body.appendChild(a);
-            a.click();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let yPos = 10;
+            const leftMargin = 10;
+            const rightMargin = pageWidth - 10;
 
-            // Cleanup
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } finally {
-            // Clean up - remove temporary div
-            document.body.removeChild(tempDiv);
+            // Helper for centering text
+            const centerText = (text, y, size = 12, weight = 'normal') => {
+                doc.setFontSize(size);
+                doc.setFont('helvetica', weight);
+                const textWidth = doc.getStringUnitWidth(text) * size / 2.83465;
+                const x = (pageWidth - textWidth) / 2;
+                doc.text(text, x, y);
+                return y + size / 2 + 2; // Return next Y
+            };
+
+            // --- Header ---
+            // Logo (if valid base64)
+            if (logoSrc && logoSrc.startsWith('data:image')) {
+                try {
+                    doc.addImage(logoSrc, 'PNG', (pageWidth - 30) / 2, yPos, 30, 30);
+                    yPos += 35;
+                } catch (e) { console.error('Logo add failed', e); }
+            } else {
+                yPos += 10;
+            }
+
+            yPos = centerText("The Dreamy Bowl", yPos, 18, 'bold');
+            yPos += 2;
+            yPos = centerText("Hinjawadi, Pune", yPos, 10);
+            yPos = centerText(`GSTIN: 27ABCDE1234F1Z5`, yPos, 10);
+            yPos = centerText(new Date().toLocaleString(), yPos, 10);
+
+            yPos += 5;
+            doc.setLineWidth(0.5);
+            doc.line(leftMargin, yPos, rightMargin, yPos);
+            yPos += 7;
+
+            // --- Order Info ---
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Order ID: ${lastOrder?.orderId}`, leftMargin, yPos);
+            yPos += 6;
+            doc.text(`Customer: ${lastOrder?.customerName || 'Guest'}`, leftMargin, yPos);
+            yPos += 6;
+            if (lastOrder?.customerPhone) {
+                doc.text(`Phone: ${lastOrder?.customerPhone}`, leftMargin, yPos);
+                yPos += 6;
+            }
+
+            // Token
+            yPos += 5;
+            doc.setFillColor(240, 240, 240);
+            doc.rect(leftMargin, yPos, rightMargin - leftMargin, 15, 'F');
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Token: ${lastOrder?.token}`, pageWidth / 2, yPos + 10, { align: 'center' });
+            yPos += 20;
+
+            // --- Items ---
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Items", leftMargin, yPos);
+            doc.text("Price", rightMargin, yPos, { align: 'right' });
+            yPos += 2;
+            doc.line(leftMargin, yPos, rightMargin, yPos);
+            yPos += 6;
+
+            lastOrder?.items?.forEach(item => {
+                const name = `${item.name} x${item.quantity || 1}`;
+                const price = `Rs. ${item.price * (item.quantity || 1)}`;
+
+                // Handle long names text wrapping
+                const splitName = doc.splitTextToSize(name, 80);
+                doc.text(splitName, leftMargin, yPos);
+                doc.text(price, rightMargin, yPos, { align: 'right' });
+
+                yPos += (splitName.length * 5) + 3;
+            });
+
+            doc.line(leftMargin, yPos, rightMargin, yPos);
+            yPos += 7;
+
+            // --- Totals ---
+            doc.setFontSize(11);
+            const addTotalLine = (label, value, bold = false) => {
+                doc.setFont('helvetica', bold ? 'bold' : 'normal');
+                doc.text(label, leftMargin + 20, yPos); // Indent totals
+                doc.text(value, rightMargin, yPos, { align: 'right' });
+                yPos += 6;
+            };
+
+            addTotalLine("Sub Total", `Rs. ${lastOrder?.subTotal}`);
+            addTotalLine("GST (5%)", `Rs. ${lastOrder?.gst}`);
+            if (discount > 0) {
+                doc.setTextColor(16, 185, 129); // Green for discount
+                addTotalLine("Loyalty Discount", `-Rs. ${discount}`);
+                doc.setTextColor(0, 0, 0); // Reset black
+            }
+            yPos += 2;
+            doc.setFontSize(14);
+            addTotalLine("GRAND TOTAL", `Rs. ${lastOrder?.totalAmount}`, true);
+
+            // --- Footer ---
+            yPos += 15;
+            centerText('"Life is short, make it sweet!"', yPos, 10, 'italic');
+            yPos += 10; // offset returned is small, manually invalid
+            doc.setFontSize(10);
+            doc.text("Thank you for visiting!", pageWidth / 2, yPos, { align: 'center' });
+
+            // Save
+            const filename = `Receipt-${lastOrder?.orderId || 'order'}.pdf`;
+            console.log('Saving PDF as:', filename);
+            doc.save(filename);
+
+        } catch (e) {
+            console.error("PDF generation failed:", e);
+            alert("Error creating PDF: " + e.message);
         }
     };
 
@@ -674,119 +482,139 @@ const CartModal = () => {
         <>
             <div style={styles.body}>
                 {/* Dreamy Tip Alert */}
-                {upsellTip && (
-                    <div style={{
-                        background: 'linear-gradient(135deg, #121212 0%, #1E1E1E 100%)',
-                        border: '1px solid #FFD700',
-                        borderRadius: '12px',
-                        padding: '12px',
-                        marginBottom: '16px',
-                        display: 'flex',
-                        gap: '12px',
-                        alignItems: 'start',
-                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.15)'
-                    }}>
+                {
+                    upsellTip && (
                         <div style={{
-                            background: 'rgba(255, 215, 0, 0.2)',
-                            padding: '8px',
-                            borderRadius: '50%',
-                            color: '#FFD700'
+                            background: 'linear-gradient(135deg, #121212 0%, #1E1E1E 100%)',
+                            border: '1px solid #FFD700',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'start',
+                            boxShadow: '0 4px 12px rgba(255, 215, 0, 0.15)'
                         }}>
-                            <Sparkles size={18} />
-                        </div>
-                        <div>
-                            <div style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '4px' }}>
-                                Dreamy Tip 🌙
+                            <div style={{
+                                background: 'rgba(255, 215, 0, 0.2)',
+                                padding: '8px',
+                                borderRadius: '50%',
+                                color: '#FFD700'
+                            }}>
+                                <Sparkles size={18} />
                             </div>
-                            <div style={{ color: '#e0e0e0', fontSize: '0.85rem', lineHeight: '1.4' }}>
-                                {upsellTip.replace("Dreamy Tip: ", "")}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {cartItems.length === 0 ? (
-                    <div style={styles.empty}>
-                        <p>Your bowl is empty 🥣</p>
-                        <button style={styles.linkBtn} onClick={handleClose}>Start Ordering</button>
-                    </div>
-                ) : (
-                    cartItems.map(item => (
-                        <div key={item.cartId} style={styles.itemRow}>
-                            <div style={styles.itemInfo}>
-                                <div style={styles.itemName}>
-                                    {item.name}
-                                    {item.quantity > 1 && <span style={styles.qtyBadge}>x{item.quantity}</span>}
+                            <div>
+                                <div style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '4px' }}>
+                                    Dreamy Tip 🌙
                                 </div>
-                                <div style={styles.itemPrice}>₹{item.price * (item.quantity || 1)}</div>
-                                {item.type === 'CUSTOM' && (
-                                    <div style={styles.itemMeta}>
-                                        {item.details.base.name} + {item.details.sauce.name}
+                                <div style={{ color: '#e0e0e0', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                                    {upsellTip.replace("Dreamy Tip: ", "")}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {
+                    cartItems.length === 0 ? (
+                        <div style={styles.empty}>
+                            <p>Your bowl is empty 🥣</p>
+                            <button style={styles.linkBtn} onClick={handleClose}>Start Ordering</button>
+                        </div>
+                    ) : (
+                        cartItems.map(item => (
+                            <div key={item.cartId} style={styles.itemRow}>
+                                <div style={styles.itemInfo}>
+                                    <div style={styles.itemName}>
+                                        {item.name}
+                                        {item.quantity > 1 && <span style={styles.qtyBadge}>x{item.quantity}</span>}
+                                    </div>
+                                    <div style={styles.itemPrice}>₹{item.price * (item.quantity || 1)}</div>
+                                    {item.type === 'CUSTOM' && (
+                                        <div style={styles.itemMeta}>
+                                            {item.details.base.name} + {item.details.sauce.name}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div style={styles.qtyControls}>
+                                    <button
+                                        onClick={() => updateQuantity(item.cartId, -1)}
+                                        style={styles.qtyBtn}
+                                    >
+                                        -
+                                    </button>
+                                    <span style={styles.qtyVal}>{item.quantity || 1}</span>
+                                    <button
+                                        onClick={() => updateQuantity(item.cartId, 1)}
+                                        style={styles.qtyBtn}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <button onClick={() => removeFromCart(item.cartId)} style={styles.removeBtn}>
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        ))
+                    )
+                }
+            </div >
+            {
+                cartItems.length > 0 && (
+                    <div style={styles.footer}>
+                        {/* Combo Hint */}
+                        {comboHint && comboHint.message && (
+                            <div style={{
+                                ...styles.comboHint,
+                                background: comboHint.qualified ? '#d1fae5' : '#fef3c7',
+                                color: comboHint.qualified ? '#065f46' : '#92400e',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>
+                                    {comboHint.message}
+                                </div>
+                                {comboHint.hint && (
+                                    <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>
+                                        {comboHint.hint}
                                     </div>
                                 )}
                             </div>
+                        )}
 
-                            <div style={styles.qtyControls}>
-                                <button
-                                    onClick={() => updateQuantity(item.cartId, -1)}
-                                    style={styles.qtyBtn}
-                                >
-                                    -
-                                </button>
-                                <span style={styles.qtyVal}>{item.quantity || 1}</span>
-                                <button
-                                    onClick={() => updateQuantity(item.cartId, 1)}
-                                    style={styles.qtyBtn}
-                                >
-                                    +
-                                </button>
-                            </div>
-
-                            <button onClick={() => removeFromCart(item.cartId)} style={styles.removeBtn}>
-                                <Trash2 size={16} />
-                            </button>
+                        <div style={styles.totalRow}>
+                            <span>Subtotal</span>
+                            <span style={styles.totalVal}>₹{cartTotal}</span>
                         </div>
-                    ))
-                )}
-            </div>
-            {cartItems.length > 0 && (
-                <div style={styles.footer}>
-                    {/* Combo Hint */}
-                    {comboHint && comboHint.message && (
-                        <div style={{
-                            ...styles.comboHint,
-                            background: comboHint.qualified ? '#d1fae5' : '#fef3c7',
-                            color: comboHint.qualified ? '#065f46' : '#92400e',
-                            marginBottom: '1rem'
-                        }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                                {comboHint.message}
-                            </div>
-                            {comboHint.hint && (
-                                <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>
-                                    {comboHint.hint}
+
+                        {/* Combo Discount Display */}
+                        {comboDiscount && comboDiscount.applicable && (
+                            <>
+                                <div style={{
+                                    ...styles.totalRow,
+                                    color: '#10b981',
+                                    fontWeight: '600',
+                                    marginTop: '0.5rem'
+                                }}>
+                                    <span>🎉 {comboDiscount.comboName}</span>
+                                    <span>-₹{comboDiscount.savings}</span>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                <div style={{
+                                    ...styles.totalRow,
+                                    fontSize: '1.2rem',
+                                    fontWeight: '700',
+                                    marginTop: '0.5rem',
+                                    paddingTop: '0.5rem',
+                                    borderTop: '2px solid #e5e7eb'
+                                }}>
+                                    <span>Total</span>
+                                    <span style={{ color: '#667eea' }}>₹{comboDiscount.discountedTotal}</span>
+                                </div>
+                            </>
+                        )}
 
-                    <div style={styles.totalRow}>
-                        <span>Subtotal</span>
-                        <span style={styles.totalVal}>₹{cartTotal}</span>
-                    </div>
-
-                    {/* Combo Discount Display */}
-                    {comboDiscount && comboDiscount.applicable && (
-                        <>
-                            <div style={{
-                                ...styles.totalRow,
-                                color: '#10b981',
-                                fontWeight: '600',
-                                marginTop: '0.5rem'
-                            }}>
-                                <span>🎉 {comboDiscount.comboName}</span>
-                                <span>-₹{comboDiscount.savings}</span>
-                            </div>
+                        {!comboDiscount?.applicable && (
                             <div style={{
                                 ...styles.totalRow,
                                 fontSize: '1.2rem',
@@ -796,30 +624,16 @@ const CartModal = () => {
                                 borderTop: '2px solid #e5e7eb'
                             }}>
                                 <span>Total</span>
-                                <span style={{ color: '#667eea' }}>₹{comboDiscount.discountedTotal}</span>
+                                <span style={styles.totalVal}>₹{cartTotal}</span>
                             </div>
-                        </>
-                    )}
+                        )}
 
-                    {!comboDiscount?.applicable && (
-                        <div style={{
-                            ...styles.totalRow,
-                            fontSize: '1.2rem',
-                            fontWeight: '700',
-                            marginTop: '0.5rem',
-                            paddingTop: '0.5rem',
-                            borderTop: '2px solid #e5e7eb'
-                        }}>
-                            <span>Total</span>
-                            <span style={styles.totalVal}>₹{cartTotal}</span>
-                        </div>
-                    )}
-
-                    <button style={styles.checkoutBtn} onClick={() => setStep('CUSTOMER_INFO')}>
-                        Proceed to Checkout <ArrowRight size={18} />
-                    </button>
-                </div>
-            )}
+                        <button style={styles.checkoutBtn} onClick={() => setStep('CUSTOMER_INFO')}>
+                            Proceed to Checkout <ArrowRight size={18} />
+                        </button>
+                    </div>
+                )
+            }
         </>
     );
 

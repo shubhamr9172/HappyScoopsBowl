@@ -71,6 +71,24 @@ export const PREBUILT_COMBOS = [
         tier: 3, // Premium tier
         comboEligible: false,
         image: "/images/menu/strawberry_biscoff.jpg"
+    },
+    {
+        id: 9,
+        name: "Classic Chocolate Mousse",
+        description: "Airy, velvety chocolate mousse dusted with dark chocolate shavings.",
+        price: 50,
+        tier: 2,
+        comboEligible: true,
+        image: "/images/menu/classic_chocolate_mousse.png"
+    },
+    {
+        id: 10,
+        name: "KitKat Mousse Fusion",
+        description: "Rich mousse topped with KitKat fingers, chocolate sauce, and wafer crumbs.",
+        price: 89,
+        tier: 2,
+        comboEligible: true,
+        image: "/images/menu/kitkat_mousse_fusion.png"
     }
 ];
 
@@ -79,7 +97,7 @@ export const PREBUILT_COMBOS = [
 export const PRICING_CONFIG = {
     tiers: {
         1: { label: 'Economy', color: '#10B981', min: 40, max: 49 }, // Emerald Green
-        2: { label: 'Mid-Tier', color: '#F59E0B', min: 50, max: 59 }, // Amber
+        2: { label: 'Mid-Tier', color: '#F59E0B', min: 50, max: 99 }, // Amber (Updated max to 99)
         3: { label: 'Premium', color: '#8B5CF6', min: 129, max: 149 } // Violet
     },
     // Global deducted items per order

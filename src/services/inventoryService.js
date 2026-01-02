@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { collection, addDoc, onSnapshot, doc, updateDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, doc, updateDoc, getDocs, setDoc, deleteDoc } from "firebase/firestore";
 
 const COLLECTION_NAME = "inventory";
 
@@ -246,7 +246,8 @@ export const InventoryService = {
                 recipe.forEach(ingredient => {
                     const idx = inventory.findIndex(i => i.id === ingredient.id);
                     if (idx !== -1) {
-                        inventory[idx].currentStock = Math.max(0, inventory[idx].currentStock - ingredient.quantity);
+                        const deductQty = ingredient.quantity * (item.quantity || 1);
+                        inventory[idx].currentStock = Math.max(0, inventory[idx].currentStock - deductQty);
                     }
                 });
             });
@@ -257,7 +258,10 @@ export const InventoryService = {
         }
 
         try {
-            // Firebase implementation
+            // Firebase implementation - Optimized
+            // 1. Aggregation: Calculate total needed for each ingredient first
+            const deductions = {}; // Map<IngredientID, TotalQuantity>
+
             for (const item of orderItems) {
                 let recipe = [];
                 const recipeKey = item.id.toString();
@@ -266,19 +270,33 @@ export const InventoryService = {
                     recipe = INGREDIENT_RECIPES[recipeKey];
                 }
 
-                for (const ingredient of recipe) {
-                    const itemRef = doc(db, COLLECTION_NAME, ingredient.id);
-                    const snapshot = await getDocs(collection(db, COLLECTION_NAME));
-                    const currentItem = snapshot.docs.find(d => d.id === ingredient.id);
+                // Add logic for custom items if needed in future
 
-                    if (currentItem) {
-                        const data = currentItem.data();
-                        await updateDoc(itemRef, {
-                            currentStock: Math.max(0, data.currentStock - ingredient.quantity)
-                        });
-                    }
+                for (const ingredient of recipe) {
+                    const totalQty = ingredient.quantity * (item.quantity || 1);
+                    deductions[ingredient.id] = (deductions[ingredient.id] || 0) + totalQty;
                 }
             }
+
+            // 2. Execution: Update each affected ingredient
+            // Using Promise.all for parallel processing since operations are independent per ingredient
+            const updates = Object.entries(deductions).map(async ([ingId, qty]) => {
+                const itemRef = doc(db, COLLECTION_NAME, ingId);
+                try {
+                    const itemSnap = await getDoc(itemRef);
+                    if (itemSnap.exists()) {
+                        const currentData = itemSnap.data();
+                        await updateDoc(itemRef, {
+                            currentStock: Math.max(0, (currentData.currentStock || 0) - qty)
+                        });
+                    }
+                } catch (err) {
+                    console.error(`Failed to update stock for ${ingId}:`, err);
+                }
+            });
+
+            await Promise.all(updates);
+
         } catch (error) {
             console.error("Error deducting stock:", error);
         }
@@ -309,6 +327,73 @@ export const InventoryService = {
         }
     },
 
+    // Add new item
+    addItem: async (itemData) => {
+        if (!isFirebaseConfigured()) {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const newItem = { ...itemData, id: Date.now().toString() };
+            inventory.push(newItem);
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            window.dispatchEvent(new Event('inventory-updated'));
+            return newItem;
+        }
+
+        try {
+            // Use custom ID if provided (like 'sugar'), otherwise auto-id
+            const itemId = itemData.id || Date.now().toString();
+            // Create doc
+            await setDoc(doc(db, COLLECTION_NAME, itemId), {
+                ...itemData,
+                id: itemId,
+                lastRestocked: new Date()
+            });
+            return { ...itemData, id: itemId };
+        } catch (error) {
+            console.error("Error adding item:", error);
+            throw error;
+        }
+    },
+
+    // Delete item
+    deleteItem: async (itemId) => {
+        if (!isFirebaseConfigured()) {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const updatedInventory = inventory.filter(i => i.id !== itemId);
+            localStorage.setItem('inventory', JSON.stringify(updatedInventory));
+            window.dispatchEvent(new Event('inventory-updated'));
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, COLLECTION_NAME, itemId));
+        } catch (error) {
+            console.error("Error deleting item:", error);
+            throw error;
+        }
+    },
+
+    // Update item details (name, cost, category, etc)
+    updateItemDetails: async (itemId, updates) => {
+        if (!isFirebaseConfigured()) {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const idx = inventory.findIndex(i => i.id === itemId);
+            if (idx !== -1) {
+                inventory[idx] = { ...inventory[idx], ...updates };
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                window.dispatchEvent(new Event('inventory-updated'));
+            }
+            return;
+        }
+
+        try {
+            const itemRef = doc(db, COLLECTION_NAME, itemId);
+            await updateDoc(itemRef, updates);
+        } catch (error) {
+            console.error("Error updating item details:", error);
+            throw error;
+        }
+    },
+
     // --- Menu Availability Management ---
 
     // Get menu availability status
@@ -331,5 +416,11 @@ export const InventoryService = {
         availability[itemId] = isAvailable;
         localStorage.setItem('menu_availability', JSON.stringify(availability));
         window.dispatchEvent(new Event('menu-availability-updated'));
+    },
+
+    // Get low stock items helper
+    getLowStockItems: (inventory) => {
+        if (!Array.isArray(inventory)) return [];
+        return inventory.filter(item => item.currentStock <= (item.minStock || 0));
     }
 };

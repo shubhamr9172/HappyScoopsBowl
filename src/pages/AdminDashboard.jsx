@@ -29,6 +29,7 @@ const AdminDashboard = () => {
             const unsubInventory = InventoryService.subscribeToInventory((inventory) => {
                 const lowStock = InventoryService.getLowStockItems(inventory);
                 setLowStockCount(lowStock.length);
+                NotificationService.checkLowStock(inventory);
             });
 
             return () => unsubInventory();
@@ -54,95 +55,13 @@ const AdminDashboard = () => {
         setIsMuted(newMuteState);
     };
 
-    const handleLogin = () => {
-        const success = login(pinInput);
-        if (!success) {
-            setLoginError('Incorrect PIN');
-        }
-    };
-
     const handleLogout = () => {
         logout();
-        navigate('/admin');
+        navigate('/admin/login');
     };
 
-    if (!isAuthenticated) {
-        return (
-            <div style={{
-                height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: 'var(--light)'
-            }}>
-                <div style={{
-                    background: 'white',
-                    padding: '2rem',
-                    borderRadius: '16px',
-                    boxShadow: 'var(--shadow-lg)',
-                    width: '90%',
-                    maxWidth: '400px',
-                    textAlign: 'center'
-                }}>
-                    <h3>Owner Login 🔐</h3>
-                    <p style={{ marginBottom: '1rem', color: '#666' }}>Enter PIN to access dashboard</p>
-                    {loginError && (
-                        <div style={{
-                            color: 'var(--danger)',
-                            background: '#fee2e2',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            marginBottom: '1rem',
-                            fontSize: '0.9rem',
-                            fontWeight: '500',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            justifyContent: 'center'
-                        }}>
-                            <span style={{ fontSize: '1.2rem' }}>⚠️</span> {loginError}
-                        </div>
-                    )}
-                    <input
-                        type="password"
-                        value={pinInput}
-                        onChange={(e) => {
-                            setPinInput(e.target.value);
-                            setLoginError('');
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleLogin();
-                        }}
-                        placeholder="Enter Owner PIN"
-                        style={{
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            border: '1px solid #ddd',
-                            width: '100%',
-                            marginBottom: '1rem',
-                            fontSize: '1rem'
-                        }}
-                    />
-                    <button
-                        onClick={handleLogin}
-                        style={{
-                            ...styles.payBtn,
-                            width: '100%',
-                            padding: '1rem',
-                            background: 'var(--primary)',
-                            color: 'white'
-                        }}
-                    >
-                        Login
-                    </button>
-                    <div style={{ marginTop: '1rem' }}>
-                        <a href="/" style={{ color: '#888', fontSize: '0.9rem' }}>Back to Home</a>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Note: Authentication is now handled by ProtectedRoute wrapper in App.jsx
+    // This component is only rendered if isAuthenticated is true.
 
     // Helpers
     const getStatusColor = (status) => {
@@ -201,21 +120,21 @@ const AdminDashboard = () => {
                 </div>
 
                 <div style={styles.navGrid}>
-                    <a href="/admin/analytics" style={styles.navCard}>
+                    <div onClick={() => navigate('/admin/analytics')} style={{ ...styles.navCard, cursor: 'pointer' }}>
                         <div style={styles.navIcon}>📊</div>
                         <span style={styles.navLabel}>Analytics</span>
-                    </a>
-                    <a href="/admin/inventory" style={{ ...styles.navCard, position: 'relative' }}>
+                    </div>
+                    <div onClick={() => navigate('/admin/inventory')} style={{ ...styles.navCard, position: 'relative', cursor: 'pointer' }}>
                         <div style={styles.navIcon}>📦</div>
                         <span style={styles.navLabel}>Inventory</span>
                         {lowStockCount > 0 && (
                             <span style={styles.alertBadge}>{lowStockCount}</span>
                         )}
-                    </a>
-                    <a href="/kitchen" style={styles.navCard}>
+                    </div>
+                    <div onClick={() => navigate('/kitchen')} style={{ ...styles.navCard, cursor: 'pointer' }}>
                         <div style={styles.navIcon}>👨‍🍳</div>
                         <span style={styles.navLabel}>Kitchen</span>
-                    </a>
+                    </div>
                 </div>
 
                 <div style={styles.stats}>

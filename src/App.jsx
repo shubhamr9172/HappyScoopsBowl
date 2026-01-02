@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomerHome from './pages/CustomerHome';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import Analytics from './pages/Analytics';
 import KitchenDisplay from './pages/KitchenDisplay';
 import Inventory from './pages/Inventory';
@@ -35,7 +36,15 @@ function AppContent() {
         <div className="container">
           <Routes>
             <Route path="/" element={<CustomerHome />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/admin/analytics"
               element={
