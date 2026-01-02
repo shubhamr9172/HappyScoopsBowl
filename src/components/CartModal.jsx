@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { X, Trash2, ArrowRight, Gift, Star, Download, TrendingUp, Sparkles } from 'lucide-react';
+import { X, Trash2, ArrowRight, Gift, Star, Download, TrendingUp, Sparkles, Search } from 'lucide-react';
 import { OrderService } from '../services/orderService';
 import { CustomerService, REWARDS } from '../services/customerService';
 import { validateName, validatePhone, validateOrderData, rateLimiter, sanitizeInput } from '../utils/validation';
@@ -514,7 +514,7 @@ const CartModal = () => {
                         onClick={handlePhoneLookup}
                         disabled={lookingUp}
                     >
-                        {lookingUp ? '...' : '🔍'}
+                        {lookingUp ? '...' : <Search size={20} />}
                     </button>
                 </div>
             </div>
@@ -1068,7 +1068,7 @@ const styles = {
         fontWeight: '700'
     },
     checkoutBtn: {
-        background: 'linear-gradient(135deg, #8ED1B8 0%, #6BB89F 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
         width: '100%',
         padding: '1rem',
@@ -1079,11 +1079,11 @@ const styles = {
         alignItems: 'center',
         gap: '0.5rem',
         fontWeight: 700,
-        boxShadow: '0 4px 12px rgba(142, 209, 184, 0.4)',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
         cursor: 'pointer',
         border: 'none',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px'
+        letterSpacing: ' 0.5px'
     },
     // Payment Styles
     qrContainer: {
@@ -1214,7 +1214,7 @@ const styles = {
         color: 'var(--text-dark)'
     },
     closeMainBtn: {
-        background: 'linear-gradient(135deg, #8ED1B8 0%, #6BB89F 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
         width: '100%',
         padding: '1rem',
@@ -1223,11 +1223,11 @@ const styles = {
         fontWeight: 700,
         border: 'none',
         cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(142, 209, 184, 0.4)'
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
     },
     downloadBtn: {
-        background: 'var(--success)',
-        color: 'white',
+        background: 'white',
+        color: '#667eea',
         width: '100%',
         padding: '1rem',
         borderRadius: '99px',
@@ -1238,9 +1238,9 @@ const styles = {
         justifyContent: 'center',
         gap: '0.5rem',
         cursor: 'pointer',
-        border: 'none',
+        border: '2px solid #667eea',
         fontSize: '1rem',
-        boxShadow: '0 4px 12px rgba(72, 187, 120, 0.3)'
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)'
     },
     qtyBadge: {
         fontSize: '0.75rem',
@@ -1302,14 +1302,15 @@ const styles = {
         padding: '1rem',
         borderRadius: '12px',
         border: 'none',
-        background: 'var(--primary)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
         cursor: 'pointer',
-        fontSize: '1.2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '50px'
+        width: '50px',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+        transition: 'transform 0.2s, box-shadow 0.2s'
     },
     loyaltyCard: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
